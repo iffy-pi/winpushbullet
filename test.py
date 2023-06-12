@@ -75,27 +75,17 @@
 
 from winotify import Notification
 import traceback
+import glob
 import os
 
-def notify(title, body=""):
-    path = r"C:\Users\omnic\local\temp\EnitreCode.ino"
-    path = "file:///{}".format(path.replace("\\", "/"))
-    toast = Notification('test', title, msg=body, icon=r"C:\Users\omnic\local\GitRepos\pushbullet-pc-integration\pushbullet-icon.png")
-    toast.add_actions(label="Log file", launch=path)
-    toast.show()
+def latest_log():
+    # get the list of files in the log directory
+    dd = "C:\\Users\\omnic\\local\\temp"
+    list_of_files = glob.glob(f'{dd}\\*')
+    # get the c time of each file and use that as the key to order the list
+    # and identify the maximum
+    latest_file = max(list_of_files, key=os.path.getmtime)
 
+    return os.path.join(dd, latest_file)
 
-def exceptionNofication(appId, errorObj, logFilePath):
-    title = 'An error occured.'
-    body = str(errorObj)
-    logFilePath = os.path.abspath(logFilePath)
-    path = "file:///{}".format(logFilePath.replace("\\", "/"))
-
-    toast = Notification(appId, title, msg=body, icon=r"C:\Users\omnic\local\GitRepos\pushbullet-pc-integration\pushbullet-icon.png")
-    toast.add_actions(label="Open log file", launch=path)
-    toast.show()
-
-try:
-    1/0 
-except Exception as e:
-    exceptionNofication("test", e, "./.gitignore")
+print(latest_log())

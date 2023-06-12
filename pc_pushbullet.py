@@ -46,6 +46,16 @@ def determineType(content, inferFileAllowed=False):
 
     return TEXT, content
 
+def latestFileInTemp():
+    import glob
+    # get the list of files in the log directory
+    dd = "C:\\Users\\omnic\\local\\temp"
+    list_of_files = glob.glob(f'{dd}\\*')
+    # get the c time of each file and use that as the key to order the list
+    # and identify the maximum
+    latest_file = max(list_of_files, key=os.path.getmtime)
+    return os.path.join(dd, latest_file)
+
 def main():
     try:
         content = CONTENT
@@ -62,7 +72,13 @@ def main():
             notify("No content to push!")
             return
         
-        forceText, filePathCopied, inferFileAllowed = checkFlags(args, flags=("--forceText", "--filePathCopied", "--inferFileAllowed"))
+        forceText, filePathCopied, inferFileAllowed, useLatestTempFile = checkFlags(args, flags=("--forceText", "--filePathCopied", "--inferFileAllowed", "--latestTempFile"))
+
+        if useLatestTempFile:
+            # pushing latest file in temp
+            content = latestFileInTemp()
+            pushType = FILE
+
         if forceText:
             pushType = TEXT
         
