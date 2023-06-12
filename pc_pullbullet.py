@@ -45,7 +45,7 @@ def checkFlags(args:list, flag:str = "", flags:tuple=()):
     
     return tuple(results)
 
-def notify(title, body="", callback:function=None):
+def notify(title, body=""):
     if HEADLESS:
         toast = Notification('PushBullet', title, msg=body, icon=r"C:\Users\omnic\local\GitRepos\pushbullet-pc-integration\pushbullet-icon.png")
     else:
@@ -97,17 +97,7 @@ def main():
         elif push['type'] == 'file':
             fileExt = str(os.path.splitext(push['name'])[1])
 
-            if openSaveDialog:
-                # open file 
-                from FileExplorerWindow import FileExplorerWindow
-                fex = FileExplorerWindow()
-                filename = fex.save(title="Save Pushed File", path=(None, push['name']))
-                if filename is not None:
-                    with open(filename, "wb") as file:
-                        file.write(push['content'])
-                return
-
-            if openInBrowser or fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES:
+            if openInBrowser or (not openSaveDialog and fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):
                 # open it in browser
                 brave(push['url'])
                 notify(
@@ -115,6 +105,14 @@ def main():
                     f'Want to always save {fileExt} files, change script settings'
                 )
                 return
+            
+            # save to file
+            from FileExplorerWindow import FileExplorerWindow
+            fex = FileExplorerWindow()
+            filename = fex.save(title="Save Pushed File", path=(None, push['name']))
+            if filename is not None:
+                with open(filename, "wb") as file:
+                    file.write(push['content'])
 
 
     except Exception as e:
