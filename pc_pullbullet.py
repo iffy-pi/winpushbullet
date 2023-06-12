@@ -64,7 +64,7 @@ def main():
         
         HEADLESS = checkFlags(args, flag="--headless")
 
-        openSaveDialog = checkFlags(args, flag="--openSaveDialog")
+        openSaveDialog, openInBrowser= checkFlags(args, flags=("--openSaveDialog", "--openInBrowser"))
 
         accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
         pb = PushBullet(accessToken)
@@ -97,7 +97,17 @@ def main():
         elif push['type'] == 'file':
             fileExt = str(os.path.splitext(push['name'])[1])
 
-            if not openSaveDialog and fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES:
+            if openSaveDialog:
+                # open file 
+                from FileExplorerWindow import FileExplorerWindow
+                fex = FileExplorerWindow()
+                filename = fex.save(title="Save Pushed File", path=(None, push['name']))
+                if filename is not None:
+                    with open(filename, "wb") as file:
+                        file.write(push['content'])
+                return
+
+            if openInBrowser or fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES:
                 # open it in browser
                 brave(push['url'])
                 notify(
@@ -106,13 +116,6 @@ def main():
                 )
                 return
 
-            # open file 
-            from FileExplorerWindow import FileExplorerWindow
-            fex = FileExplorerWindow()
-            filename = fex.save(title="Save Pushed File", path=(None, push['name']))
-            if filename is not None:
-                with open(filename, "wb") as file:
-                    file.write(push['content'])
 
     except Exception as e:
         # something went wrong
