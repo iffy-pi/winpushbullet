@@ -76,6 +76,12 @@ class PushBullet:
         if body == '':
             raise exceptions.InvalidConfiguration(f'Empty Body!')
         
+        # if it is greater than 63 kb, to big for JSON send as file
+        if ( sys.getsizeof(body) / 1024) > 63:
+            title = title if title is not None else "Pushed Text"
+            self.pushFileContents(body, f"{title}.txt")
+            return
+        
         pushBody = {
             'type': 'note',
             'body': body
@@ -105,14 +111,7 @@ class PushBullet:
         resp = self.__makePushRequest(pushBody)
         PushBullet.__successCheck(resp)
 
-    def pushFile(self, filepath):
-        # check if the file exists
-        if not os.path.exists(filepath):
-            raise exceptions.InvalidConfiguration(f'File "{filepath}" does not exist!')
-        
-        filename = os.path.split(filepath)[1]
-        fileContents = open(filepath, 'rb').read()
-
+    def pushFileContents(self, fileContents, filename):
         mimeType, _ = mimetypes.MimeTypes().guess_type(filename)
 
         # check if its under the limit
@@ -161,6 +160,25 @@ class PushBullet:
         resp = self.__makePushRequest(pushBody)
         PushBullet.__successCheck(resp)
 
+
+    def pushFile(self, filepath, newName:str=None):
+        '''
+        New name is just <filename>.<fileext>
+        '''
+        # check if the file exists
+        if not os.path.exists(filepath):
+            raise exceptions.InvalidConfiguration(f'File "{filepath}" does not exist!')
+        
+        with open(filepath, 'rb') as file:
+            fileContents = file.read()
+
+        filename = os.path.split(filepath)[1]
+        if newName is not None:
+            filename = newName
+
+        self.pushFileContents(fileContents, filename)
+
+        
     def pull(self, count=1, modifiedAfter:int=None) -> list:
         pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?limit={count}'
 
