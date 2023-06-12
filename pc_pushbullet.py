@@ -10,43 +10,15 @@ script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
     sys.path.append(script_loc_dir)
 from PushBullet import PushBullet
+from shared import notif, checkFlags
 
 TEXT = 0
 LINK = 1
 FILE = 2
 
-def checkFlags(args:list, flag:str = "", flags:tuple=()):  
-    usedList = False
-    if len(flags) == 0:
-        flags = flag,
-    else:
-        usedList = True
-
-    results = []
-
-    for fl in flags:
-        res = False
-        try:
-            flInd = args.index(fl)
-            # flag is in args lsit
-            res = True
-
-            # remove flag from list
-            args.pop(flInd)    
-        except ValueError:
-            pass
-
-        results.append(res)
-
-    if not usedList and len(results) == 1:
-        return results[0]
-    
-    return tuple(results)
-
 def notify(title, body=""):
     if HEADLESS:
-        toast = Notification('PushBullet', title, msg=body, icon=r"C:\Users\omnic\local\GitRepos\pushbullet-pc-integration\pushbullet-icon.png")
-        toast.show()
+        notif(title, body=body)
     else:
         print(title)
         if body != "":
@@ -127,12 +99,8 @@ def main():
         notify(notifInfo[0], body=notifInfo[1])
 
     except Exception as e:
-        # something went wrong
-        if HEADLESS:
-            notify("An error occured", str(e))
-        else:
-            import traceback
-            traceback.print_exc()
+        from shared import handleError
+        handleError(e, HEADLESS)
 
     
 
