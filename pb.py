@@ -132,6 +132,17 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
         print("File Pushed{}:".format("(as {})".format(newName) if newName is not None else ""))
         print(filepath)
 
+def printKeyInfo():
+    print(
+'''Push:
+Ctrl + Alt + / : Push content from clipboard, infer text, link or file path
+Ctrl + Alt + ' : Push content from clipboard, always treat as text
+Ctrl + Alt + ] : Push latest file in C:\\Users\\local\\temp
+
+Pull:
+Ctrl + Alt + . : Pull content, can copy to clipboard, open in browser or save to file
+Ctrl + Alt + ; : Pull content, always save to file if file
+Ctrl + Alt + [ : Pull content, open file in browser if file''')
 
 def main():
     
@@ -201,6 +212,14 @@ def main():
     )
 
     parser.add_argument(
+        '--keys',
+        '--keys',
+        action='store_true',
+        help='Show the hotkeys we have configured'
+    )
+
+
+    parser.add_argument(
         '--cpy',
         '--cpy',
         action='store_true',
@@ -215,7 +234,10 @@ def main():
     )
 
     options = parser.parse_args()
-    noArgs = len(sys.argv) == 0
+
+    if options.keys:
+        printKeyInfo()
+        return
 
     # default: print, note and links to screen, ask to save file
     accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
