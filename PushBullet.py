@@ -190,6 +190,7 @@ class PushBullet:
                 fileBinary = requests.get(push['file_url']).content
                 retPush = {
                     'type': 'file',
+                    'url': push['file_url'],
                     'name': push['file_name'],
                     'content': fileBinary
                 }

@@ -39,7 +39,10 @@ class FileExplorerWindow():
 
         files = [('All Files', '*.*')]
         _dir, _file = path
-        return asksaveasfile(title=title, filetypes = files, defaultextension = files, initialdir=_dir, initialfile=_file).name
+        file = asksaveasfile(title=title, filetypes = files, defaultextension = files, initialdir=_dir, initialfile=_file)
+        if file is None:
+            return None
+        return file.name
     
     def open(self, path: tuple=(None,None), title:str=None) -> str:
         '''
