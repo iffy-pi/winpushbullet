@@ -37,18 +37,22 @@ def checkFlags(args:list, flag:str = "", flags:tuple=()):
 
 
 def scriptErrNotif(errorObj, logFilePath):
-    appId = "PushBullet"
-    title = 'An error occured.'
-    body = str(errorObj)
-    logFilePath = os.path.abspath(logFilePath)
-    path = "file:///{}".format(logFilePath.replace("\\", "/"))
+    notif("An error occured", body=str(errorObj), label="See log file", filePath=logFilePath)
 
-    toast = Notification(appId, title, msg=body, icon=NOTIF_ICON)
-    toast.add_actions(label="Open log file", launch=path)
-    toast.show()
+def notif(title, body="", label="See Here", url=None, filePath=None):
+    if len(body) > 135:
+        body = f"{body[:135]}..."
 
-def notif(title, body=""):
     toast = Notification('PushBullet', title, msg=body, icon=NOTIF_ICON)
+
+    if url is not None:
+        toast.add_actions(label=label, launch=url)
+
+    if filePath is not None:
+        filePath = os.path.abspath(filePath)
+        path = "file:///{}".format(filePath.replace("\\", "/"))
+        toast.add_actions(label=label, launch=path)
+
     toast.show()
 
 def handleError(errorObj, headless):

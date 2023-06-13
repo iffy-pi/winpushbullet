@@ -73,10 +73,19 @@ def main():
             if openInBrowser or (not openSaveDialog and fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):
                 # open it in browser
                 brave(push['url'])
-                notify(
-                    'File ({}) has been opened in the browser'.format(push['name']),
-                    f'Want to always save {fileExt} files, change script settings'
-                )
+                if not openInBrowser:
+                    title = 'File ({}) has been opened in the browser'.format(push['name'])
+                    body = f'Want to always save {fileExt} files? change script settings.'
+                    if HEADLESS:
+                        notif(
+                            title,
+                            body=body,
+                            filePath=__file__,
+                            label="Open Script"
+                        )
+                    else:
+                        print(title)
+                        print(body)
                 return
             
             # save to file
