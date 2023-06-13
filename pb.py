@@ -135,14 +135,14 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
 def printKeyInfo():
     print(
 '''Push:
-Ctrl + Alt + / : Push content from clipboard, infer text, link or file path
+Ctrl + Alt + ] : Push content from clipboard, infer text, link or file path
 Ctrl + Alt + ' : Push content from clipboard, always treat as text
-Ctrl + Alt + ] : Push latest file in C:\\Users\\local\\temp
+Ctrl + Alt + / : Push latest file in C:\\Users\\local\\temp
 
 Pull:
-Ctrl + Alt + . : Pull content, can copy to clipboard, open in browser or save to file
-Ctrl + Alt + ; : Pull content, always save to file if file
-Ctrl + Alt + [ : Pull content, open file in browser if file''')
+Ctrl + Alt + [ : Pull content, can copy to clipboard, open in browser or save to file
+Ctrl + Alt + . : Pull content, always save to file if file
+Ctrl + Alt + ; : Pull content, open in browser if possible''')
 
 def main():
     
