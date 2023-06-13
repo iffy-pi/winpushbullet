@@ -1,7 +1,16 @@
-import pyperclip
-CONTENT = pyperclip.paste()
+# pull from clip board first
+import win32clipboard as cb
+CLIPBOARD_CONTENT = ''
 
-from winotify import Notification
+cb.OpenClipboard()
+CLIPBOARD_HAS_FILE_HANDLER = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
+if cb.IsClipboardFormatAvailable(cb.CF_HDROP):
+    CLIPBOARD_CONTENT = cb.GetClipboardData(cb.CF_HDROP)
+    CLIPBOARD_HAS_FILE_HANDLER = True
+else:
+    CLIPBOARD_CONTENT = (cb.GetClipboardData(), ) 
+cb.CloseClipboard()
+
 import sys
 import os
 import keyring
@@ -9,8 +18,7 @@ import keyring
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
     sys.path.append(script_loc_dir)
-from PushBullet import PushBullet
-from shared import notif, checkFlags
+from shared import notif, checkFlags, getPushBullet
 
 TEXT = 0
 LINK = 1
@@ -22,9 +30,16 @@ def notify(title, body=""):
     else:
         print(title)
         if body != "":
-            print(f'   {body}')
-
+            if len(body) > 200:
+                print(f'   {body[:197]}...')
+            else:
+                print(f'    {body}')
+        
 def determineType(content, inferFileAllowed=False):
+    if CLIPBOARD_HAS_FILE_HANDLER:
+        # that means there is a file copied to the clipboard, return that and the path
+        return FILE, content
+    
     if inferFileAllowed:
         # infer if it is a file path and then make file
         path = content
@@ -58,61 +73,57 @@ def latestFileInTemp():
 
 def main():
     try:
-        content = CONTENT
-        pushType = -1
-        inferFileAllowed = False
         global HEADLESS
         HEADLESS = False
-
+        pushedSomething = False
         args = sys.argv[1:]
-        
+
         HEADLESS = checkFlags(args, flag="--headless")
+        forceText, filePathCopied, useLatestTempFile = checkFlags(args, flags=("--forceText", "--filePathCopied", "--latestTempFile"))
 
-        if content == '':
-            notify("No content to push!")
-            return
+        pb = getPushBullet()
         
-        forceText, filePathCopied, inferFileAllowed, useLatestTempFile = checkFlags(args, flags=("--forceText", "--filePathCopied", "--inferFileAllowed", "--latestTempFile"))
-
-        if useLatestTempFile:
-            # pushing latest file in temp
-            content = latestFileInTemp()
-            pushType = FILE
-
-        if forceText:
-            pushType = TEXT
-        
-        elif filePathCopied:
-            pushType = FILE
-
-        if pushType == -1:
-            pushType, content = determineType(content, inferFileAllowed=inferFileAllowed)
-
-        accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
-        pb = PushBullet(accessToken)
-
         pushFunction = {
             str(TEXT) : pb.pushNote,
             str(LINK) : pb.pushLink,
             str(FILE) : pb.pushFile
         }
 
-        if pushType == FILE:
-            content = content.replace('"', '').replace("'", "")
 
-        notifs = {
-            str(TEXT) : ("Text pushed successfully", content),
-            str(LINK) : ("Link pushed successfully", content),
-            str(FILE) :  ("" if pushType != FILE  else "File ({}) pushed successfully".format(os.path.split(content)[1]), "Filepath: {}".format(content) )
-        }
-        
+        for content in CLIPBOARD_CONTENT:
+            pushType = -1
+            if content == '':
+                continue
 
-        # call the relevant push function
-        pushFunction[str(pushType)](content)
+            if useLatestTempFile:
+                # pushing latest file in temp
+                content = latestFileInTemp()
+                pushType = FILE
 
-        # notify user
-        notifInfo = notifs[str(pushType)]
-        notify(notifInfo[0], body=notifInfo[1])
+            elif forceText:
+                pushType = TEXT
+            
+            elif filePathCopied:
+                pushType = FILE
+
+            if pushType == -1:
+                pushType, content = determineType(content, inferFileAllowed=False)
+
+            if pushType == FILE:
+                content = content.replace('"', '').replace("'", "")
+
+            notifs = {
+                str(TEXT) : ("Text pushed successfully", content),
+                str(LINK) : ("Link pushed successfully", content),
+                str(FILE) :  ("" if pushType != FILE  else "File ({}) pushed successfully".format(os.path.split(content)[1]), "Filepath: {}".format(content) )
+            }
+            
+            # call the relevant push function
+            pushFunction[str(pushType)](content)
+
+            # notify user
+            notifInfo = notifs[str(pushType)]
+            notify(notifInfo[0], body=notifInfo[1])
 
     except Exception as e:
         from shared import handleError

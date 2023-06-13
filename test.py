@@ -73,19 +73,14 @@
 #         time.sleep(1)
 #         print("i'm running")
 
-from winotify import Notification
-import traceback
-import glob
-import os
-
-def latest_log():
-    # get the list of files in the log directory
-    dd = "C:\\Users\\omnic\\local\\temp"
-    list_of_files = glob.glob(f'{dd}\\*')
-    # get the c time of each file and use that as the key to order the list
-    # and identify the maximum
-    latest_file = max(list_of_files, key=os.path.getmtime)
-
-    return os.path.join(dd, latest_file)
-
-print(latest_log())
+import win32clipboard as cb
+ 
+cb.OpenClipboard()
+ 
+if cb.IsClipboardFormatAvailable(cb.CF_HDROP):
+  clipboard_file_path = cb.GetClipboardData(cb.CF_HDROP)
+  print(clipboard_file_path)
+else:
+  print((cb.GetClipboardData(),))
+ 
+cb.CloseClipboard()

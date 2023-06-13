@@ -6,8 +6,7 @@ import os
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
     sys.path.append(script_loc_dir)
-from PushBullet import PushBullet
-from shared import checkFlags, notif
+from shared import checkFlags, notif, getPushBullet
 
 
 # files that should always be opened in the browser
@@ -24,7 +23,10 @@ def notify(title, body=""):
     else:
         print(title)
         if body != "":
-            print(f'   {body}')
+            if len(body) > 200:
+                print(f'   {body[:197]}...')
+            else:
+                print(f'    {body}')
 
 def brave(link):
     import subprocess
@@ -39,9 +41,7 @@ def main():
 
         strictlyCopy, strictlyBrowser = checkFlags(args, flags=("--strictlyCopy", "--strictlyBrowser"))
 
-        accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
-        pb = PushBullet(accessToken)
-
+        pb = getPushBullet()
         push = pb.pull(1)[0]
 
         if push['type'] == 'note':
@@ -74,6 +74,16 @@ def main():
 
 
         elif push['type'] == 'file':
+            # handle where it was just text over size
+            if push['name'] == "Pushed Text.txt":
+                text = push['content'].decode()
+                pyperclip.copy(text)
+                notify(
+                    'Text has been copied to your clipboard',
+                    str(text)
+                )
+                return
+
             fileExt = str(os.path.splitext(push['name'])[1])
 
             if strictlyBrowser or (fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):

@@ -98,8 +98,19 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
         filepath = latestFileInTemp()
 
     if clipBoard:
-        import pyperclip
-        text = pyperclip.paste()
+        import win32clipboard as cb
+        cb.OpenClipboard()
+        hasFile = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
+        if hasFile:
+            content = cb.GetClipboardData(cb.CF_HDROP)
+        else:
+            content = (cb.GetClipboardData(), ) 
+        cb.CloseClipboard()
+
+        # call on each of the items
+        for c in content:
+            push(pb, filepath=c, title=title, message=message, fname=fname)
+
 
     if text is not None and text != "":
         
