@@ -37,7 +37,7 @@ def main():
         
         HEADLESS = checkFlags(args, flag="--headless")
 
-        openSaveDialog, openInBrowser= checkFlags(args, flags=("--openSaveDialog", "--openInBrowser"))
+        strictlyCopy, strictlyBrowser = checkFlags(args, flags=("--strictlyCopy", "--strictlyBrowser"))
 
         accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
         pb = PushBullet(accessToken)
@@ -54,26 +54,32 @@ def main():
         elif push['type'] == 'link':
             pyperclip.copy(push['url'])
 
-            msg = push['url']
+            if strictlyCopy:
+                msg = push['url']
 
-            if push.get('title') is not None:
-                msg = "{}\nTitle: {}".format(msg, push['title'])
+                if push.get('title') is not None:
+                    msg = "{}\nTitle: {}".format(msg, push['title'])
 
-            if push.get('body') is not None:
-                msg = "{}\nMessage: {}".format(msg, push['body'])
+                if push.get('body') is not None:
+                    msg = "{}\nMessage: {}".format(msg, push['body'])
 
-            notify(
-                'URL has been copied to your clipboard',
-                msg
-            )
+                notify(
+                    'URL has been copied to your clipboard',
+                    msg
+                )
+                return
+
+            # default behaviour, open in browser
+            brave(push['url'])
+
 
         elif push['type'] == 'file':
             fileExt = str(os.path.splitext(push['name'])[1])
 
-            if openInBrowser or (not openSaveDialog and fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):
+            if strictlyBrowser or (fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):
                 # open it in browser
                 brave(push['url'])
-                if not openInBrowser:
+                if not strictlyBrowser:
                     title = 'File ({}) has been opened in the browser'.format(push['name'])
                     body = f'Want to always save {fileExt} files? change script settings.'
                     if HEADLESS:
@@ -88,7 +94,7 @@ def main():
                         print(body)
                 return
             
-            # save to file
+            # default is open file window
             from FileExplorerWindow import FileExplorerWindow
             fex = FileExplorerWindow()
             filename = fex.save(title="Save Pushed File", path=(None, push['name']))
