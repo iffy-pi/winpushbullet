@@ -28,7 +28,7 @@ def notify(title, body=""):
             else:
                 print(f'    {body}')
 
-def brave(link):
+def openInBrowser(link):
     import subprocess
     child = subprocess.Popen([r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe", link])
 
@@ -70,7 +70,7 @@ def main():
                 return
 
             # default behaviour, open in browser
-            brave(push['url'])
+            openInBrowser(push['url'])
 
 
         elif push['type'] == 'file':
@@ -88,7 +88,7 @@ def main():
 
             if strictlyBrowser or (fileExt.lower().replace('.', '' ) in BROWSER_HANDLED_FILES):
                 # open it in browser
-                brave(push['url'])
+                openInBrowser(push['url'])
                 if not strictlyBrowser:
                     title = 'File ({}) has been opened in the browser'.format(push['name'])
                     body = f'Want to always save {fileExt} files? change script settings.'
@@ -107,11 +107,13 @@ def main():
             # default is open file window
             from FileExplorerWindow import FileExplorerWindow
             fex = FileExplorerWindow()
-            filename = fex.save(title="Save Pushed File", path=(None, push['name']))
+            filename = fex.save(title="Save Pushed File (Or Cancel to Open In Browser)", path=(None, push['name']))
             if filename is not None:
                 with open(filename, "wb") as file:
                     file.write(push['content'])
-
+            else:
+                # if user cancelled save, then open in the browser
+                openInBrowser(push['url'])
 
     except Exception as e:
         from shared import handleError

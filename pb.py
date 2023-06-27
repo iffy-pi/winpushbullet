@@ -209,8 +209,8 @@ def main():
     )
 
     parser.add_argument(
-        '--paste',
-        '--paste',
+        '--clip',
+        '--clip',
         action='store_true',
         help='Get content from clipboard and push as text'
     )
@@ -238,8 +238,8 @@ def main():
     )
 
     parser.add_argument(
-        '--see',
-        '--see',
+        '--b',
+        '--b',
         action='store_true',
         help='Pulls content and opens it in browser if applicabke, otherwise it will be printed to the screen'
     )
@@ -254,12 +254,12 @@ def main():
     accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
     pb = PushBullet(accessToken)
     
-    if (options.temp or options.paste) or any(arg is not None for arg in (options.f, options.n, options.l)):
+    if (options.temp or options.clip) or any(arg is not None for arg in (options.f, options.n, options.l)):
         push(pb, options.n, options.l, options.f, title=options.title, message=options.msg, 
-                fname=options.fname, latestTemp=options.temp, clipBoard=options.paste)
+                fname=options.fname, latestTemp=options.temp, clipBoard=options.clip)
         return
 
-    pull(pb, options.cpy, options.see)
+    pull(pb, options.cpy, options.b)
     
 
 

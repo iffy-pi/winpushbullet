@@ -74,13 +74,31 @@
 #         print("i'm running")
 
 import win32clipboard as cb
- 
+CLIPBOARD_CONTENT = None
+couldBeScreenshot = False
+
 cb.OpenClipboard()
- 
+CLIPBOARD_HAS_FILE_HANDLER = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
 if cb.IsClipboardFormatAvailable(cb.CF_HDROP):
-  clipboard_file_path = cb.GetClipboardData(cb.CF_HDROP)
-  print(clipboard_file_path)
+    CLIPBOARD_CONTENT = cb.GetClipboardData(cb.CF_HDROP)
+    CLIPBOARD_HAS_FILE_HANDLER = True
 else:
-  print((cb.GetClipboardData(),))
- 
+    # tuple to allow for multiple items
+    try:
+        CLIPBOARD_CONTENT = (cb.GetClipboardData(), )
+    except TypeError:
+        CLIPBOARD_CONTENT = None
+        couldBeScreenshot = True
 cb.CloseClipboard()
+
+if couldBeScreenshot:
+    # screenshots copied to clipboard cause this exception
+    # grab the screenshow with Pillow, save to file and return the file handler
+    from PIL import ImageGrab
+    tempSc = r"C:\Users\omnic\local\temp\screenshot.png"
+    img = ImageGrab.grabclipboard()
+    print(img)
+    img.save(tempSc)
+    CLIPBOARD_CONTENT = (tempSc, )
+
+print(CLIPBOARD_CONTENT)
