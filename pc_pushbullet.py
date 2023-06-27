@@ -1,6 +1,7 @@
 # pull from clip board first
 import win32clipboard as cb
-CLIPBOARD_CONTENT = ''
+CLIPBOARD_CONTENT = None
+couldBeScreenshot = False
 
 cb.OpenClipboard()
 CLIPBOARD_HAS_FILE_HANDLER = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
@@ -8,8 +9,23 @@ if cb.IsClipboardFormatAvailable(cb.CF_HDROP):
     CLIPBOARD_CONTENT = cb.GetClipboardData(cb.CF_HDROP)
     CLIPBOARD_HAS_FILE_HANDLER = True
 else:
-    CLIPBOARD_CONTENT = (cb.GetClipboardData(), ) 
+    # tuple to allow for multiple items
+    try:
+        CLIPBOARD_CONTENT = (cb.GetClipboardData(), )
+    except TypeError:
+        CLIPBOARD_CONTENT = None
+        couldBeScreenshot = True
 cb.CloseClipboard()
+
+if couldBeScreenshot:
+    # screenshots copied to clipboard cause this exception
+    # grab the screenshow with Pillow, save to file and return the file handler
+    from PIL import ImageGrab
+    tempSc = r"C:\Users\omnic\local\temp\screenshot.png"
+    img = ImageGrab.grabclipboard()
+    img.save(tempSc)
+    CLIPBOARD_CONTENT = (tempSc, )
+    CLIPBOARD_HAS_FILE_HANDLER = True
 
 import sys
 import os
@@ -24,9 +40,9 @@ TEXT = 0
 LINK = 1
 FILE = 2
 
-def notify(title, body=""):
+def notify(title, body="", filePath=None):
     if HEADLESS:
-        notif(title, body=body)
+        notif(title, body=body, filePath=filePath)
     else:
         print(title)
         if body != "":
@@ -38,7 +54,7 @@ def notify(title, body=""):
 def determineType(content, inferFileAllowed=False):
     if CLIPBOARD_HAS_FILE_HANDLER:
         # that means there is a file copied to the clipboard, return that and the path
-        return FILE, content
+        return FILE
     
     if inferFileAllowed:
         # infer if it is a file path and then make file
@@ -48,18 +64,18 @@ def determineType(content, inferFileAllowed=False):
                 path = path[1:-1]
         
         if os.path.exists(path):
-            return FILE, path
+            return FILE
 
     # infer if it is a link
     for p in ['http://', 'https://', 'www.']:
         if content.startswith(p):
-            return LINK, content
+            return LINK
         
     for p in ['.com', '.ca', '.org']:
         if content.endswith(p):
-            return LINK, content
+            return LINK
 
-    return TEXT, content
+    return TEXT
 
 def latestFileInTemp():
     import glob
@@ -75,7 +91,6 @@ def main():
     try:
         global HEADLESS
         HEADLESS = False
-        pushedSomething = False
         args = sys.argv[1:]
 
         HEADLESS = checkFlags(args, flag="--headless")
@@ -89,6 +104,11 @@ def main():
             str(FILE) : pb.pushFile
         }
 
+        somethingPushed = False
+
+        if CLIPBOARD_CONTENT is None:
+            notify("No content to push")
+            return 0
 
         for content in CLIPBOARD_CONTENT:
             pushType = -1
@@ -101,29 +121,40 @@ def main():
                 pushType = FILE
 
             elif forceText:
+                # treat anything copied as text
                 pushType = TEXT
             
             elif filePathCopied:
                 pushType = FILE
 
             if pushType == -1:
-                pushType, content = determineType(content, inferFileAllowed=False)
+                pushType = determineType(content, inferFileAllowed=False)
 
+            # if its a file, then remove any quotes in the file path name
             if pushType == FILE:
                 content = content.replace('"', '').replace("'", "")
 
+            notifAttachment = None
             notifs = {
                 str(TEXT) : ("Text pushed successfully", content),
                 str(LINK) : ("Link pushed successfully", content),
                 str(FILE) :  ("" if pushType != FILE  else "File ({}) pushed successfully".format(os.path.split(content)[1]), "Filepath: {}".format(content) )
             }
+
+            if couldBeScreenshot:
+                notifs[str(FILE)] = ("Screenshot pushed successfully", '')
             
             # call the relevant push function
             pushFunction[str(pushType)](content)
 
-            # notify user
+            # notify user with notify function
             notifInfo = notifs[str(pushType)]
-            notify(notifInfo[0], body=notifInfo[1])
+            notify(notifInfo[0], body=notifInfo[1], filePath=notifAttachment)
+
+            somethingPushed = True
+
+        if not somethingPushed:
+            notify("No content to push")
 
     except Exception as e:
         from shared import handleError
