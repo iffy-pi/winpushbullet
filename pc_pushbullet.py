@@ -7,7 +7,7 @@ cb.OpenClipboard()
 FILE_COPIED = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
 
 if FILE_COPIED:
-    CLIPBOARD_ITEM = cb.GetClipboardData(cb.CF_HDROP)
+    CLIPBOARD_ITEM = cb.GetClipboardData(cb.CF_HDROP)[0]
 else:
     try:
         CLIPBOARD_ITEM = cb.GetClipboardData()
@@ -88,6 +88,7 @@ def doPush(pushType, item:str):
 
         case 2: # FILE
             filepath = item.replace('"', '').replace("'", "")
+
             pb.pushFile(filepath)
 
             if couldBeScreenshot:
