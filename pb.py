@@ -146,14 +146,33 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
 def printKeyInfo():
     print(
 '''Push:
-Ctrl + Alt + ] : Push content from clipboard, infer text, link or file path
-Ctrl + Alt + ' : Push content from clipboard, always treat as text
-Ctrl + Alt + / : Push latest file in C:\\Users\\local\\temp
+Ctrl + Alt + ] : Push Content (Default)
+    - Gets content from clipboard, infers text, link, file or file from filepath
+
+Ctrl + Alt + ' : Push Content (Text)
+    - Gets content from clipboard, always treats as text
+
+Ctrl + Alt + / : Push Content (Temp)
+    - Pushes latest file in C:\\Users\\local\\temp
 
 Pull:
-Ctrl + Alt + [ : Pull content, can copy to clipboard, open in browser or save to file
-Ctrl + Alt + . : Pull content, always save to file if file
-Ctrl + Alt + ; : Pull content, open in browser if possible''')
+Ctrl + Alt + [ : Pull Content (Default)
+    - Copies text to clipboard
+    - Copies images (jpeg, jpg and png) to clipboard
+    - Opens URLs in browser
+    - Save File Dialog for other files
+
+Ctrl + Alt + . : Pull Content (Copy)
+    - Copies text to clipboard
+    - Copies images to clipboard
+    - Copies URLs to clipboard
+    - Save File Dialog for other files
+
+Ctrl + Alt + ; : Pull Content (Browser)
+    - Copies text to clipboard
+    - Opens URLs in browser
+    - Opens images and other files in browser
+''')
 
 def main():
     
