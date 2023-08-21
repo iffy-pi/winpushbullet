@@ -1,6 +1,7 @@
 import sys
 import pyperclip
 import os
+from PushBullet import PushBullet
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
@@ -68,14 +69,9 @@ def copyImageToClipboard(fileExt, fileContent):
     
 
 def handleFile(pushFile):
-    # handle where it was just text over size
-    if pushFile['name'] == "Pushed Text.txt":
-        handleNote(pushFile['content'].decode())
-        return
-    
     fileExt = str(os.path.splitext(pushFile['name'])[1]).lower().replace('.', '')
 
-    if STRICTLY_COPY and (fileExt in ['png', 'jpeg', 'jpg']):
+    if STRICTLY_COPY or (fileExt in ['png', 'jpeg', 'jpg']):
         # if it is an image file, then we copy it to the clipboard 
         copyImageToClipboard(fileExt, pushFile['content'])
         notify(
@@ -84,7 +80,7 @@ def handleFile(pushFile):
         )
         return
     
-    if STRICTLY_BROWSWER or (fileExt in BROWSER_HANDLED_FILES):
+    if STRICTLY_BROWSWER:
         # open it in browser
         openInBrowser(pushFile['url'])
         if not STRICTLY_BROWSWER:
@@ -123,16 +119,16 @@ def main():
         push = getPushBullet().pull(1)[0]
 
         match push['type']:
-            case 'note':
+            case PushBullet.PushType.TEXT:
                 if isLink(push['body']):
                     handleLink(push['body'])
                 else:
                     handleNote(push['body'])
 
-            case 'link':
+            case PushBullet.PushType.LINK:
                 handleLink(push['url'])
 
-            case 'file':
+            case PushBullet.PushType.FILE:
                 handleFile(push)
 
             case _:
