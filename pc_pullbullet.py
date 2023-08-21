@@ -41,6 +41,32 @@ def handleLink(url):
     # default behaviour, open in browser
     openInBrowser(url)
 
+def copyImageToClipboard(fileExt, fileContent):
+    # save the image to a temp file
+    tempFile = r"C:\Users\omnic\local\temp\temp." + fileExt
+    with open(tempFile, 'wb') as file:
+        file.write(fileContent)
+
+    # open the image with PIL
+    import win32clipboard
+    from PIL import Image
+    from io import BytesIO
+
+    image = Image.open(tempFile)
+
+    # convert to clipboard byte stream
+    output = BytesIO()
+    image.convert("RGB").save(output, "BMP")
+    data = output.getvalue()[14:]
+    output.close()
+
+    # paste into the clipboard
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    win32clipboard.CloseClipboard()
+    
+
 def handleFile(pushFile):
     # handle where it was just text over size
     if pushFile['name'] == "Pushed Text.txt":
@@ -49,6 +75,15 @@ def handleFile(pushFile):
     
     fileExt = str(os.path.splitext(pushFile['name'])[1]).lower().replace('.', '')
 
+    if STRICTLY_COPY and (fileExt in ['png', 'jpeg', 'jpg']):
+        # if it is an image file, then we copy it to the clipboard 
+        copyImageToClipboard(fileExt, pushFile['content'])
+        notify(
+            "Image has been copied to your clipboard",
+            body=pushFile['name']
+        )
+        return
+    
     if STRICTLY_BROWSWER or (fileExt in BROWSER_HANDLED_FILES):
         # open it in browser
         openInBrowser(pushFile['url'])
