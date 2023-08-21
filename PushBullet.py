@@ -5,6 +5,7 @@ import mimetypes
 import json
 import shlex
 import keyring
+from enum import Enum
 
 def prettify(d: dict) -> str:
     return json.dumps(d, indent=4)
@@ -42,6 +43,11 @@ class exceptions:
 
 class PushBullet:
     PUSHBULLET_API = 'https://api.pushbullet.com/v2'
+    class PushType(Enum):
+        TEXT = 0
+        LINK = 1
+        FILE = 2
+
     def __init__(self, accessToken, premium=False):
         self.__accessToken = accessToken
         self.premium = premium
@@ -178,8 +184,17 @@ class PushBullet:
 
         self.pushFileContents(fileContents, filename)
 
+    def getPushType(responsePushType: str):
+        ty = responsePushType.lower()
+        if ty == 'note':
+            return PushBullet.PushType.TEXT
+        if ty == 'link':
+            return PushBullet.PushType.LINK
+        if ty == 'file':
+            return PushBullet.PushType.FILE
+        raise Exception(f'Unknown Push Type in response: "{responsePushType}"')
         
-    def pull(self, count=1, modifiedAfter:int=None) -> list:
+    def pull(self, count=1, modifiedAfter:int=None) -> list[dict]:
         pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?limit={count}'
 
         if modifiedAfter is not None:
@@ -196,22 +211,33 @@ class PushBullet:
 
         pushes = []
         for push in resp['pushes']:
+            ty = PushBullet.getPushType(push['type'])
             retPush = {
-                'type': push['type'],
+                'type': ty,
                 'title': push.get('title'),
                 'url': push.get('url'),
                 'body': push.get('body'),
             }
 
-            if push['type'] == 'file':
+            if ty == PushBullet.PushType.FILE:
                 # need to get file contents
                 fileBinary = requests.get(push['file_url']).content
-                retPush = {
-                    'type': 'file',
-                    'url': push['file_url'],
-                    'name': push['file_name'],
-                    'content': fileBinary
-                }
+
+                # its text that was larger than limit so pushed as file
+                # automatically push to text
+                if push['file_name'] == 'Pushed Text.txt':
+                    retPush = {
+                        'type': PushBullet.PushType.TEXT,
+                        'title': push.get('title'),
+                        'body': fileBinary.decode()
+                    }
+                else:
+                    retPush = {
+                        'type': PushBullet.PushType.FILE,
+                        'url': push['file_url'],
+                        'name': push['file_name'],
+                        'content': fileBinary
+                    }
             
             pushes.append(retPush)
         return pushes
