@@ -162,16 +162,21 @@ Ctrl + Alt + [ : Pull Content (Default)
     - Opens URLs in browser
     - Save File Dialog for other files
 
-Ctrl + Alt + . : Pull Content (Copy)
+Ctrl + Alt + ; : Pull Content (Copy)
     - Copies text to clipboard
     - Copies images to clipboard
     - Copies URLs to clipboard
     - Save File Dialog for other files
 
-Ctrl + Alt + ; : Pull Content (Browser)
+Ctrl + Alt + > : Pull Content (Open In Browser)
     - Copies text to clipboard
     - Opens URLs in browser
     - Opens images and other files in browser
+
+Ctrl + Alt + < : Pull Content (Save To File)
+    - Copies text to clipboard
+    - Opens URLs in browser
+    - Save File Dialog for images and files
 ''')
 
 def main():

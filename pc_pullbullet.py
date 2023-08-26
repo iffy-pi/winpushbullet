@@ -71,8 +71,9 @@ def copyImageToClipboard(fileExt, fileContent):
 def handleFile(pushFile):
     fileExt = str(os.path.splitext(pushFile['name'])[1]).lower().replace('.', '')
 
-    if STRICTLY_COPY or (fileExt in ['png', 'jpeg', 'jpg']):
+    if STRICTLY_COPY or (not STRICTLY_FILE and fileExt in ['png', 'jpeg', 'jpg']):
         # if it is an image file, then we copy it to the clipboard 
+        # if strictly copy or default behaviour
         copyImageToClipboard(fileExt, pushFile['content'])
         notify(
             "Image has been copied to your clipboard",
@@ -112,8 +113,9 @@ def main():
     try:
         global STRICTLY_COPY
         global STRICTLY_BROWSWER
+        global STRICTLY_FILE
         args = sys.argv[1:]
-        headless, STRICTLY_COPY, STRICTLY_BROWSWER = checkFlags(args, flags=("--headless", "--strictlyCopy", "--strictlyBrowser"))
+        headless, STRICTLY_COPY, STRICTLY_BROWSWER, STRICTLY_FILE = checkFlags(args, flags=("--headless", "--strictlyCopy", "--strictlyBrowser", "--strictlyFile"))
         setHeadless(headless)
 
         push = getPushBullet().pull(1)[0]
