@@ -1,22 +1,25 @@
 # pull from clip board first, doing it immediately to improve script speed
 import win32clipboard as cb
 CLIPBOARD_ITEM = None
-couldBeScreenshot = False
+imageInClipboard = False
 
 cb.OpenClipboard()
-FILE_COPIED = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
+FILE_PATH_POINTER_IN_CLIPBOARD = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
 
-if FILE_COPIED:
+if FILE_PATH_POINTER_IN_CLIPBOARD:
+    # get the file path as the clipboard item
     CLIPBOARD_ITEM = cb.GetClipboardData(cb.CF_HDROP)[0]
 else:
+    # try to get thing copied to clipboard
+    # causes exception if an image is copied e.g. like a screenshot
     try:
         CLIPBOARD_ITEM = cb.GetClipboardData()
     except TypeError:
         CLIPBOARD_ITEM = None
-        couldBeScreenshot = True
+        imageInClipboard = True
 cb.CloseClipboard()
 
-if couldBeScreenshot:
+if imageInClipboard:
     # screenshots copied to clipboard cause this exception
     # grab the screenshow with Pillow, save to file and return the file handler
     from PIL import ImageGrab
@@ -24,7 +27,7 @@ if couldBeScreenshot:
     img = ImageGrab.grabclipboard()
     img.save(tempSc)
     CLIPBOARD_ITEM = tempSc
-    FILE_COPIED = True
+    FILE_PATH_POINTER_IN_CLIPBOARD = True
 
 import sys
 import os
@@ -39,10 +42,6 @@ LINK = 1
 FILE = 2
         
 def determineType(content, inferFileAllowed=False):
-    if FILE_COPIED:
-        # that means there is a file copied to the clipboard, return that and the path
-        return FILE
-    
     if inferFileAllowed:
         # infer if it is a file path and then make file
         path = content
@@ -91,9 +90,9 @@ def doPush(pushType, item:str):
 
             pb.pushFile(filepath)
 
-            if couldBeScreenshot:
+            if imageInClipboard:
                 notify(
-                    'Screenshot pushed successfully'
+                    'Copied Image pushed successfully'
                 )
             else:
                 notify(
@@ -115,23 +114,23 @@ def main():
         item = CLIPBOARD_ITEM
         pushType = -1
 
+        # check if there is content to push
+        if item is None or item == '':
+            notify("No content to push")
+            return 0
+
         # apply arguments
         if forceText:
             # treat anything copied as text
             pushType = TEXT
         
-        elif filePathCopied:
+        elif filePathCopied or FILE_PATH_POINTER_IN_CLIPBOARD:
             pushType = FILE
         
         elif useLatestTempFile:
             # pushing latest file in temp
             item = latestFileInTemp()
             pushType = FILE
-
-        # check if there is content to push
-        if item is None or item == '':
-            notify("No content to push")
-            return 0
 
         if pushType == -1:
             pushType = determineType(item, inferFileAllowed=False)
