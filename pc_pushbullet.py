@@ -73,7 +73,7 @@ def doPush(pushType, item:str):
     pb = getPushBullet()
     match pushType:
         case 0: # TEXT
-            pb.pushNote(item)
+            pb.pushText(item)
             notify(
                 'Text pushed successfully',
                 item

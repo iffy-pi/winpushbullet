@@ -114,7 +114,7 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
 
     if text is not None and text != "":
         
-        pb.pushNote(text, title=title)
+        pb.pushText(text, title=title)
         print("Note Pushed:")
 
         if len(text) > 100:
