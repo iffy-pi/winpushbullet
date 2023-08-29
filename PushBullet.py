@@ -197,12 +197,17 @@ class PushBullet:
             return PushBullet.PushType.FILE
         raise Exception(f'Unknown Push Type in response: "{responsePushType}"')
         
-    def pull(self, count, modifiedAfter:datetime.datetime=None) -> list[dict]:
-        pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?limit={count}'
+    def pull(self, limit: int = None, modifiedAfter:datetime.datetime=None) -> list[dict]:
+        if limit is None and modifiedAfter is None:
+            raise exceptions.InvalidConfiguration('Must specify a limit or modified after date for pull request')
+
+        pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?'
+
+        if limit is not None:
+            pushURL = f'{pushURL}limit={limit}'
 
         if modifiedAfter is not None:
-            pushURL = '{}&modified_after={}'.format(pushURL, PushBullet.__dateTimeToUnix(modifiedAfter))
-
+            pushURL = '{}{}modified_after={}'.format(pushURL, '&' if limit is not None else '', PushBullet.__dateTimeToUnix(modifiedAfter))
 
         response = requests.get(
             pushURL,
