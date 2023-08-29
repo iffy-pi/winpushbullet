@@ -2,9 +2,9 @@ import sys
 import requests
 import os
 import mimetypes
+import time
 import json
-import shlex
-import keyring
+import datetime
 from enum import Enum
 
 def prettify(d: dict) -> str:
@@ -51,6 +51,9 @@ class PushBullet:
     def __init__(self, accessToken, premium=False):
         self.__accessToken = accessToken
         self.premium = premium
+
+    def __dateTimeToUnix(date: datetime.datetime):
+        return int(time.mktime(date.timetuple()))
     
     def __successCheck(response:requests.Response, raiseException=True) -> bool:
         # based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -78,7 +81,7 @@ class PushBullet:
             },
             json=pushBody)
 
-    def pushNote(self, body, title:str=None):
+    def pushText(self, body, title:str=None):
         if body == '':
             raise exceptions.InvalidConfiguration(f'Empty Body!')
         
@@ -194,11 +197,11 @@ class PushBullet:
             return PushBullet.PushType.FILE
         raise Exception(f'Unknown Push Type in response: "{responsePushType}"')
         
-    def pull(self, count=1, modifiedAfter:int=None) -> list[dict]:
+    def pull(self, count, modifiedAfter:datetime.datetime=None) -> list[dict]:
         pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?limit={count}'
 
         if modifiedAfter is not None:
-            pushURL = '{}&modified_after={}'.format(pushURL, modifiedAfter)
+            pushURL = '{}&modified_after={}'.format(pushURL, PushBullet.__dateTimeToUnix(modifiedAfter))
 
 
         response = requests.get(
@@ -242,9 +245,9 @@ class PushBullet:
             pushes.append(retPush)
         return pushes
     
+    
 def main():
-    accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
-    pb = PushBullet(accessToken)
+    print('Hello World')
 
 if __name__ == '__main__':
     sys.exit(main())
