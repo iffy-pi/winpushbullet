@@ -1,11 +1,12 @@
 import os
 import keyring
 from winotify import Notification
-from PushBullet import PushBullet
+from scripts.PushBullet import PushBullet
+from config.userconfig import TEMP_DIRECTORY
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 
-ERROR_LOG_FILE = r"C:\Users\omnic\OneDrive\Computer Collection\Pushbullet\error_logs.txt"
+ERROR_LOG_FILE = f"{TEMP_DIRECTORY}\\error_logs.txt"
 NOTIF_ICON = os.path.join(script_loc_dir, "pushbullet-icon.png")
 
 def getPushBullet():

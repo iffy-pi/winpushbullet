@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from PushBullet import PushBullet
+from scripts.PushBullet import PushBullet
 import keyring
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
@@ -62,7 +62,7 @@ def pull(pb:PushBullet, copyPush, openInBrowser, fname=None):
 
         # default
         # save to file
-        from FileExplorerWindow import FileExplorerWindow
+        from scripts.FileExplorerWindow import FileExplorerWindow
         fex = FileExplorerWindow()
         
         path=os.path.split(push['name'])
@@ -144,40 +144,7 @@ def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:s
         print(filepath)
 
 def printKeyInfo():
-    print(
-'''Push:
-Ctrl + Alt + ] : Push Content (Default)
-    - Gets content from clipboard, infers text, link, file or file from filepath
-
-Ctrl + Alt + ' : Push Content (Text)
-    - Gets content from clipboard, always treats as text
-
-Ctrl + Alt + / : Push Content (Temp)
-    - Pushes latest file in C:\\Users\\local\\temp
-
-Pull:
-Ctrl + Alt + [ : Pull Content (Default)
-    - Copies text to clipboard
-    - Copies images (jpeg, jpg and png) to clipboard
-    - Opens URLs in browser
-    - Save File Dialog for other files
-
-Ctrl + Alt + ; : Pull Content (Copy)
-    - Copies text to clipboard
-    - Copies images to clipboard
-    - Copies URLs to clipboard
-    - Save File Dialog for other files
-
-Ctrl + Alt + > : Pull Content (Open In Browser)
-    - Copies text to clipboard
-    - Opens URLs in browser
-    - Opens images and other files in browser
-
-Ctrl + Alt + < : Pull Content (Save To File)
-    - Copies text to clipboard
-    - Opens URLs in browser
-    - Save File Dialog for images and files
-''')
+    print('Refer to project README: {}'.format(os.path.abspath(os.path.join(os.path.split(__file__)[0], 'README.md'))))
 
 def main():
     

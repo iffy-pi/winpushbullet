@@ -1,6 +1,6 @@
 import sys
 import datetime
-from PushBullet import PushBullet
+from scripts.PushBullet import PushBullet
 
 def main():
 
@@ -16,7 +16,7 @@ def main():
 
     # push a file
     # can change the name of the file for when it is pushed
-    filepath = 'example.py'
+    filepath = 'pushbulletExample.py'
     pb.pushFile(filepath, newName='Pushed File.py')
 
     # to get pushes
