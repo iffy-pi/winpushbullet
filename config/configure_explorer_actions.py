@@ -47,7 +47,7 @@ def addPullFileToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File",
         'Pull File To Here',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--saveToDir" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--strictlyFile" "--saveToDir" "%V"',
         icon=icon
     )
 
@@ -56,7 +56,7 @@ def addPullFileRenameToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File And Rename",
         'Pull File To Here and Rename...',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--saveToDirAndRename" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--strictlyFile" "--saveToDirAndRename" "%V"',
         icon=icon
     )
 

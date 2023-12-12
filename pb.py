@@ -70,7 +70,7 @@ def pull(pb:PushBullet, copyPush, openInBrowser, fname=None):
             fname = os.path.abspath(fname)
             path = os.path.split(fname)
         
-        filename = fex.save(title="Save Pushed File", path=path)
+        filename = fex.getSavePath(windowTitle="Save Pushed File", path=path)
         
         if filename is not None:
             with open(filename, "wb") as file:

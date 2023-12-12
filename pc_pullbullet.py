@@ -35,7 +35,7 @@ def copyImageToClipboard(fileExt, fileContent):
 
     # convert to clipboard byte stream
     output = BytesIO()
-    image.convert("RGB").save(output, "BMP")
+    image.convert("RGB").saveDlg(output, "BMP")
     data = output.getvalue()[14:]
     output.close()
 
@@ -66,19 +66,14 @@ def copyImageAndNotify(pushFile, fileExt):
         body=pushFile['name']
     )
 
-def saveFileWithDialog(pushFile, folder=None) -> bool:
+def saveFileWithDialog(pushFile, fileExt, folder=None) -> bool:
     # Returns true if the file was saved, and false otherwise
     from scripts.FileExplorerWindow import FileExplorerWindow
-    fex = FileExplorerWindow()
-
-    filename = fex.save(title="Save Pushed File (Or Cancel to Open In Browser)", path=(folder, pushFile['name']))
-    
-    if filename is not None:
-        with open(filename, "wb") as file:
-            file.write(pushFile['content'])
-        return True
-    else:
-        return False
+    fileTypes = [('Current File', f'*.{fileExt}'), ('All Files', '*.*')]
+    return FileExplorerWindow().save(pushFile['content'],
+                                     windowTitle="Save Pushed File (Or Cancel to Open In Browser)",
+                                     path=(folder, pushFile['name']),
+                                     fileTypes=fileTypes)
 
 def handleFile(pushFile):
     fileExt = str(os.path.splitext(pushFile['name'])[1]).lower().replace('.', '')
@@ -89,26 +84,31 @@ def handleFile(pushFile):
         return
 
     # Only image files can be copied
-    if not(STRICTLY_FILE or STRICTLY_BROWSWER) and isCopyableImage(fileExt):
+    if not(FORCE_SAVE_FILE or FORCE_OPEN_IN_BROWSER) and isCopyableImage(fileExt):
         copyImageAndNotify(pushFile, fileExt)
         return
     
-    if STRICTLY_BROWSWER:
+    if FORCE_OPEN_IN_BROWSER:
         # open the file in browser
         openInBrowser(pushFile['url'])
         return
     
     # default is open file window
-    windowDirectory = ARGS[0].replace('"', '') if SAVE_TO_PATH_AND_RENAME else None
-    fileSaved = saveFileWithDialog(pushFile, folder=windowDirectory)
+    windowDirectory = ARGS[0].replace('"', '') if FORCE_SAVE_FILE_AND_RENAME else None
+    fileSaved = saveFileWithDialog(pushFile, fileExt, folder=windowDirectory)
 
-    if not fileSaved and not SAVE_TO_PATH_AND_RENAME:
+    if not fileSaved and not FORCE_SAVE_FILE_AND_RENAME:
         # If file was not saved and user did not want to rename the file, open in the browser
         openInBrowser(pushFile['url'])
 
+
+def saveTextFile(text:str, filename=None, folder=None) -> bool:
+    # Returns true if the file was saved, and false otherwise
+    from scripts.FileExplorerWindow import FileExplorerWindow
+    return FileExplorerWindow().save(text.encode(), windowTitle="Save Text", path=(folder, filename), fileTypes=[('Plain Text', '*.txt'), ('All Files', '*.*')])
+
 def handleLink(url):
-    # copy to clipboard if stricly copy is on, otherwise open in browser
-    if STRICTLY_COPY:
+    if FORCE_COPY_TO_CLIBOARD:
         pyperclip.copy(url)
         notify(
             'Link has been copied to your clipboard',
@@ -116,11 +116,21 @@ def handleLink(url):
         )
         return
 
+    if FORCE_SAVE_FILE or FORCE_SAVE_FILE_AND_RENAME:
+        # save to file
+        saveTextFile(url)
+        return
+
     # default behaviour, open in browser
     openInBrowser(url)
 
 def handleNote(text):
-    # copies text to clipboard
+    if FORCE_SAVE_FILE or FORCE_SAVE_FILE_AND_RENAME:
+        # save to file
+        saveTextFile(text)
+        return
+
+    # default behaviour copy text to clipboard
     pyperclip.copy(text)
     notify(
         'Text has been copied to your clipboard',
@@ -130,17 +140,17 @@ def handleNote(text):
 
 def main():
     try:
-        global STRICTLY_COPY
-        global STRICTLY_BROWSWER
-        global STRICTLY_FILE
+        global FORCE_COPY_TO_CLIBOARD
+        global FORCE_OPEN_IN_BROWSER
+        global FORCE_SAVE_FILE
         global SAVE_TO_PATH_ARG_AVAIL
-        global SAVE_TO_PATH_AND_RENAME
+        global FORCE_SAVE_FILE_AND_RENAME
         global ARGS
         ARGS = sys.argv[1:]
 
 
-        headless, STRICTLY_COPY, STRICTLY_BROWSWER, STRICTLY_FILE, SAVE_TO_PATH_ARG_AVAIL, SAVE_TO_PATH_AND_RENAME = checkFlags(ARGS, 
-            flags=("--headless", "--strictlyCopy", "--strictlyBrowser", "--strictlyFile", "--saveToDir", "--saveToDirAndRename"))
+        headless, FORCE_COPY_TO_CLIBOARD, FORCE_OPEN_IN_BROWSER, FORCE_SAVE_FILE, SAVE_TO_PATH_ARG_AVAIL, FORCE_SAVE_FILE_AND_RENAME = checkFlags(ARGS,
+                                                                                                                                                  flags=("--headless", "--strictlyCopy", "--strictlyBrowser", "--strictlyFile", "--saveToDir", "--saveToDirAndRename"))
         setHeadless(headless)
 
         push = getPushBullet().pull(1)[0]

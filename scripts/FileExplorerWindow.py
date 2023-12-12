@@ -32,17 +32,42 @@ class FileExplorerWindow():
         self.root.withdraw()
         windll.shcore.SetProcessDpiAwareness(1)
 
-    def save(self, path:tuple=(None, None), title:str=None) -> str:
+    def getSavePath(self, path:tuple=(None, None), windowTitle:str=None, fileTypes:list[tuple[str, str]]=None) -> str:
         '''
-        Opens file explorer dialog for saving a file and returns string of file name
+        Opens file explorer dialog for saving a file and returns string of file name to save
+        :param path: A tuple of (folder, filename) that the explorer window will open to
+        :param windowTitle: The title of the explorer window
+        :param fileTypes: The list of file type extensions e.g. [('All Files', '*.*'), ('Plain Text', '*.txt')]
+        :return: str : The address of the file path to save to, None if the user cancelled
         '''
 
-        files = [('All Files', '*.*')]
+        if fileTypes is None:
+            fileTypes = [('All Files', '*.*')]
+
         _dir, _file = path
-        file = asksaveasfile(title=title, filetypes = files, defaultextension = files, initialdir=_dir, initialfile=_file)
+        file = asksaveasfile(title=windowTitle, filetypes = fileTypes, defaultextension = fileTypes, initialdir=_dir, initialfile=_file)
         if file is None:
             return None
         return file.name
+
+    def save(self, binaryContent:bytes, path:tuple=(None, None), windowTitle:str=None, fileTypes:list[tuple[str, str]]=None) -> bool:
+        """
+        Saves the binaryContent using a save file explorer window
+        :param binaryContent: The bytes of the file to be saved
+        :param path: A tuple of (folder, filename) that the explorer window will open to
+        :param windowTitle: The title of the explorer window
+        :param fileTypes: The list of file type extensions e.g. [('All Files', '*.*'), ('Plain Text', '*.txt')]
+        :return: boolean : True if the file is saved, false if it is not (user cancelled)
+        """
+        filename = self.getSavePath(path=path, windowTitle=windowTitle, fileTypes=fileTypes)
+        if filename is None:
+            return False
+
+        with open(filename, 'wb') as file:
+            file.write(binaryContent)
+
+        return True
+
     
     def open(self, path: tuple=(None,None), title:str=None) -> str:
         '''

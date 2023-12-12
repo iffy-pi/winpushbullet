@@ -3,6 +3,7 @@ import keyring
 from winotify import Notification
 from scripts.PushBullet import PushBullet
 from config.userconfig import TEMP_DIRECTORY
+from config.save_access_token import CRED_SERVICE_NAME, CRED_USER_NAME
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 
@@ -10,7 +11,13 @@ ERROR_LOG_FILE = f"{TEMP_DIRECTORY}\\error_logs.txt"
 NOTIF_ICON = os.path.join(script_loc_dir, "pushbullet-icon.png")
 
 def getPushBullet():
-    accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
+    accessToken = keyring.get_password(CRED_SERVICE_NAME, CRED_USER_NAME)
+    if accessToken is None:
+        text = f'''Could not find PushBullet access token
+Check Credential Manager > Generic Credentials for the user "{CRED_USER_NAME}" under the service {CRED_SERVICE_NAME}.
+Alternatively, reregister your access token using config.savePushBulletAccessToken'''
+        raise Exception(text)
+
     return PushBullet(accessToken)
 
 def setHeadless(val):

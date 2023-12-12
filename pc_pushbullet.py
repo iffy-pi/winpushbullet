@@ -26,7 +26,7 @@ if imageInClipboard:
     from PIL import ImageGrab
     tempSc = f"{TEMP_DIRECTORY}\\screenshot.png"
     img = ImageGrab.grabclipboard()
-    img.save(tempSc)
+    img.saveDlg(tempSc)
     CLIPBOARD_ITEM = tempSc
     FILE_PATH_POINTER_IN_CLIPBOARD = True
 

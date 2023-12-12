@@ -1,36 +1,40 @@
 # PushBullet PC Integration
-This is a set of scripts I designed that uses PushBullet to achieve AirDrop-like functionality between my Windows Laptop and Apple Devices.
+This is a set of scripts I designed that uses PushBullet to achieve AirDrop-like functionality between Windows PCs and Apple Devices.
 
-## Computer Extensions
-If you follow the steps in the Configure section, then these are the features available to you
+This involves sharing of text, links and files quickly between the Apple device and the Windows PC.
 
+## Functions and Features
+If you configure the system (see Configure section below), you will have access to the following functions.
 ### Pushing Content HotKeys
 - Default: `Ctrl + Alt + ]`
-    - Gets content from clipboard, infers text, link, file or file from copied file path
+    - Gets content from clipboard and pushes to PushBullet
+    - Infers text, link, file or file from copied file path
 - Push As Text: `Ctrl + Alt + '`
-    - Gets content from clipboard, always treats as text
+    - Gets content from clipboard, and push as text
 - Push From Temp Directory: `Ctrl + Alt + /`
     - Pushes latest file in specified directory `configs.userconfig.TEMP_DIRECTORY`
 
 ### Pulling Content HotKeys
+Each below command retrieves the last push made to PushBullet and performs different actions based on what the push type is: text, link/url, and file:
+
 - Default: `Ctrl + Alt + [`
-    - Copies text to clipboard
-    - Copies images (jpeg, jpg and png) to clipboard
-    - Opens URLs in browser
-    - Save File Dialog for other files
+    - Text is copied to clipboard
+    - URLs are opened in your configured browser (`configs.userconfig.BROWSER_EXECUTABLE_PATH`)
+    - Image files (jpeg, jpg and png) are copied to clipboard
+    - Other files are handled with a Save File dialog
 - Copy Content: `Ctrl + Alt + ;`
-    - Copies text to clipboard
-    - Copies URLs to clipboard
-    - Copies image files to clipboard
-    - Save File Dialog for other files
+    - Text is copied to clipboard
+    - URLs are copied to clipboard
+    - Image files (jpeg, jpg and png) are copied to clipboard
+    - Other files are handled with a Save File dialog
 - Open In Browser: `Ctrl + Alt + > `
-    - Copies text to clipboard
-    - Opens URLs in browser
-    - Opens images and other files in browser
+    - Text is copied to clipboard
+    - URLs are opened in your configured browser
+    - All files are opened in your configured browser
 - Save Content To File: `Ctrl + Alt + <`
-    - Copies text to clipboard
-    - Opens URLs in browser
-    - Save File Dialog for images and files
+    - Text is saved as a text file with a Save File Dialog
+    - URLs are saved as a text file with a Save File Dialog
+    - All files are handled with a Save File dialog
 
 ### File Explorer Context Menu Actions
 The following actions are also added to the context menu through the registry editor:
@@ -51,8 +55,24 @@ The following actions are also added to the context menu through the registry ed
 - Push File
   - Pushes the selected file to PushBullet
 
+## Configure Your Apple Device(s)
+### Requirements
+- A PushBullet Account (premium not required) and your access token
+	- To generate your access token, go to https://www.pushbullet.com/#settings/account > Access Tokens > Create Access Token
+- Apple Shortcuts
+  - Make sure to allow "Download shortcuts from untrusted sources" in your settings.
+
+### Install the shortcuts
+You can download and install the PushBullet and PullBullet shortcuts to push and pull content from the PushBullet Server:
+- PushBullet: https://routinehub.co/shortcut/15515/
+- PullBullet: https://routinehub.co/shortcut/15516/
+
+These shortcuts work best when added to your share sheet or home screen. 
+
 ## Configure Your PC
-### Required Programs
+### Requirements
+- A PushBullet Account (premium not required) and your access token
+	- You can use the access token you generated in the last step
 - Python 3.10
 - AutoHotKey - https://www.autohotkey.com/
 
@@ -63,8 +83,14 @@ Clone this repository onto your local PC and install the required packages, as s
 pip install -r requirements.txt
 ```
 
-### Update `config/userconfig.py`
-Populate all the fields in userconfig.py with paths on your system
+### Configure your Access Token
+Run `config/save_access_token.py` and paste your access token when you are prompted. This allows the scripts to connect to your PushBullet server.
+
+### Update the user configuration
+Populate all the fields in `config/userconfig.py` with relevant paths on your system
+
+### Configure Explorer Context Menu Actions
+Run the script `config/configure_explorer_actions.py` **as an administator** to add the explorer context menu actions.
 
 ### Configure HotKeys
 Firstly, run `config.configure_hotkeys.py`. This will generate a `hotkeys.ahk` in config/ file which maps the hotkeys specified above to the appropriate script calls.
@@ -74,9 +100,6 @@ Double click `hotkeys.ahk` to run the file. You can also configure it to run on 
 2. Type `shell:startup`
 3. Add a shortcut to `hotkeys.ahk` to the opened folder
 
-
-### Configure Explorer Context Menu Actions
-Run the script `config/configure_explorer_actions.py` **as an administator** to add the explorer context menu actions.
 
 ## Script Specification
 ### `pc_pushbullet.py`
@@ -116,6 +139,6 @@ pc_pullbullet
 - `--headless` : When used, the script will run windowless, communicating only through Windows notifications
 - `--strictlyCopy` : All text, files and links are copied to the clipboard
 - `--strictlyBrowser` : Text is copied to the clipboard but all files and links are opened in the browser.
-- `--strictlyFile` : All files are presented with save file dialog
+- `--strictlyFile` : All files are presented with save file dialog, text and URLs are saved as text files with save dialog
 - `--saveToDir <arg>` : Saves the pushed file in the directory specified with `<arg>`
 - `--saveToDirAndRename <arg>` : Presents the Save File dialog for the pushed file, opened to the directory specified with `<arg>`
