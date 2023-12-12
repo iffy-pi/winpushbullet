@@ -1,49 +1,7 @@
 # PushBullet PC Integration
 This is a set of scripts I designed that uses PushBullet to achieve AirDrop-like functionality between my Windows Laptop and Apple Devices.
 
-## Script Specification
-### `pc_pushbullet.py`
-This script is used to push content from the computer to PushBullet. The script reads the content of the clipboard and pushes it as text, URL or file based on the clipboard content type.
-
-The current specification:
-
-```
-pc_pushbullet 
-[--headless] [--forceText] [--filePathCopied] [--latestTempFile] 
-[--filePathArgument <arg>] [--textArgument <arg>]
-```
-
-- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
-- `--forceText` : Treat the clipboard content only as text, no link or file inferring
-- `--filePathCopied` : Treat the clipboard content as a path for the file to be pushed
-- `--latestTempFile` : Copy the latest file from C:\local\temp directory
-- `--filePathArgument <arg>` : Treat `<arg>` as path for the file to be pushed.
-- `--textArgument <arg>` : Treat `<arg>` as raw text
-
-### `pc_pullbullet.py`
-This is the script used to get content from PushBullet onto the computer. It is designed to get the latest push from PushBullet and handles the content based on its type. The default behaviour (no flag behaviour changes) for the types:
-
-- Text is copied to the clipboard
-- Links are opened in the browser (Brave)
-- Image files (jpegs, pngs, gifs) are copied to the clipboard
-- Other files are presented with a Save File Dialog
-
-Flags are used to override the default behaviour:
-
-```
-pc_pullbullet
-[--headless] [--strictlyCopy] [--strictlyBrowser] [--strictlyFile] 
-[--saveToDir <arg>] [--saveToDirAndRename <arg>]
-```
-
-- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
-- `--strictlyCopy` : All text, files and links are copied to the clipboard
-- `--strictlyBrowser` : Text is copied to the clipboard but all files and links are opened in the browser.
-- `--strictlyFile` : All files are presented with save file dialog
-- `--saveToDir <arg>` : Saves the pushed file in the directory specified with `<arg>`
-- `--saveToDirAndRename <arg>` : Presents the Save File dialog for the pushed file, opened to the directory specified with `<arg>`
-
-## Configured Computer Extensions
+## Computer Extensions
 If you follow the steps in the Configure section, then these are the features available to you
 
 ### Pushing Content HotKeys
@@ -118,4 +76,46 @@ Double click `hotkeys.ahk` to run the file. You can also configure it to run on 
 
 
 ### Configure Explorer Context Menu Actions
-Run the script `config/configure_explorer_actions.py` **as an administator** to add the explorer context mneu actions.
+Run the script `config/configure_explorer_actions.py` **as an administator** to add the explorer context menu actions.
+
+## Script Specification
+### `pc_pushbullet.py`
+This script is used to push content from the computer to PushBullet. The script reads the content of the clipboard and pushes it as text, URL or file based on the clipboard content type.
+
+The current specification:
+
+```
+pc_pushbullet 
+[--headless] [--forceText] [--filePathCopied] [--latestTempFile] 
+[--filePathArgument <arg>] [--textArgument <arg>]
+```
+
+- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
+- `--forceText` : Treat the clipboard content only as text, no link or file inferring
+- `--filePathCopied` : Treat the clipboard content as a path for the file to be pushed
+- `--latestTempFile` : Copy the latest file from C:\local\temp directory
+- `--filePathArgument <arg>` : Treat `<arg>` as path for the file to be pushed.
+- `--textArgument <arg>` : Treat `<arg>` as raw text
+
+### `pc_pullbullet.py`
+This is the script used to get content from PushBullet onto the computer. It is designed to get the latest push from PushBullet and handles the content based on its type. The default behaviour (no flag behaviour changes) for the types:
+
+- Text is copied to the clipboard
+- Links are opened in the browser (Brave)
+- Image files (jpegs, pngs, gifs) are copied to the clipboard
+- Other files are presented with a Save File Dialog
+
+Flags are used to override the default behaviour:
+
+```
+pc_pullbullet
+[--headless] [--strictlyCopy] [--strictlyBrowser] [--strictlyFile] 
+[--saveToDir <arg>] [--saveToDirAndRename <arg>]
+```
+
+- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
+- `--strictlyCopy` : All text, files and links are copied to the clipboard
+- `--strictlyBrowser` : Text is copied to the clipboard but all files and links are opened in the browser.
+- `--strictlyFile` : All files are presented with save file dialog
+- `--saveToDir <arg>` : Saves the pushed file in the directory specified with `<arg>`
+- `--saveToDirAndRename <arg>` : Presents the Save File dialog for the pushed file, opened to the directory specified with `<arg>`

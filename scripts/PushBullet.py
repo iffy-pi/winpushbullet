@@ -198,6 +198,12 @@ class PushBullet:
         raise Exception(f'Unknown Push Type in response: "{responsePushType}"')
         
     def pull(self, limit: int = None, modifiedAfter:datetime.datetime=None) -> list[dict]:
+        """
+        Pulls pushes from the PushBullet server
+        :param limit : Sets the maximum pushes to fetch, by default it is onlu one
+        :param modifiedAfter : Only fetch pushes modified after a specific date and time
+        :return  the list of pushes
+        """
         if limit is None and modifiedAfter is None:
             raise exceptions.InvalidConfiguration('Must specify a limit or modified after date for pull request')
 
