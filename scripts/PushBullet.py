@@ -41,12 +41,68 @@ class exceptions:
         def __init__(self, address):
             super().__init__(f'Provided address "{address}" is invalid! Addresses must be absolute!')
 
+class PushType(Enum):
+    TEXT = 0
+    LINK = 1
+    FILE = 2
+
+class PushObject:
+    """
+    Class used for managing PushObject
+    A PushType.Text object will use:
+    - title : Message title (None if not present)
+    - body: Message body
+
+    A PushType.LINK object will use:
+    - title: Link title (None if not present)
+    - url : Link URL
+    - body: Link body (None if not present)
+
+    A PushType.FILE object will use:
+    - filename: The name of the file
+    - fileURL: The URL of the file
+    - title : If there is a title included, None otherwise
+
+    """
+    def __init__(self, pushType:PushType, title:str=None, url:str=None, body:str=None, filename:str=None, fileURL:str=None):
+        self.type = pushType
+        self.title = title
+        self.url = url
+        self.body = body
+        self.fileURL = fileURL
+        self.filename = filename
+
+    def getType(self):
+        return self.type
+
+    def getFileBinary(self) -> bytes:
+        if self.fileURL is None:
+            raise Exception('No file url!')
+
+        resp = requests.get(self.fileURL)
+        return resp.content
+
+    def __str__(self):
+        propList = [f'type={self.type}']
+
+        propsToCheck = [
+            (self.title, 'title'),
+            (self.body, 'body'),
+            (self.url, 'url'),
+            (self.filename, 'filename'),
+            (self.fileURL, 'fileURL')
+        ]
+
+        for val, key in propsToCheck:
+            if val is not None:
+                propList.append(f'{key}={val}')
+
+        return 'PushObject({})'.format(", ".join(propList))
+
+
+
 class PushBullet:
     PUSHBULLET_API = 'https://api.pushbullet.com/v2'
-    class PushType(Enum):
-        TEXT = 0
-        LINK = 1
-        FILE = 2
 
     def __init__(self, accessToken, premium=False):
         self.__accessToken = accessToken
@@ -190,30 +246,24 @@ class PushBullet:
     def getPushType(responsePushType: str):
         ty = responsePushType.lower()
         if ty == 'note':
-            return PushBullet.PushType.TEXT
+            return PushType.TEXT
         if ty == 'link':
-            return PushBullet.PushType.LINK
+            return PushType.LINK
         if ty == 'file':
-            return PushBullet.PushType.FILE
+            return PushType.FILE
         raise Exception(f'Unknown Push Type in response: "{responsePushType}"')
         
-    def pull(self, limit: int = None, modifiedAfter:datetime.datetime=None) -> list[dict]:
+    def pull(self, limit: int = 1, modifiedAfter:datetime.datetime=None) -> list[PushObject]:
         """
         Pulls pushes from the PushBullet server
         :param limit : Sets the maximum pushes to fetch, by default it is onlu one
         :param modifiedAfter : Only fetch pushes modified after a specific date and time
         :return  the list of pushes
         """
-        if limit is None and modifiedAfter is None:
-            raise exceptions.InvalidConfiguration('Must specify a limit or modified after date for pull request')
-
-        pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?'
-
-        if limit is not None:
-            pushURL = f'{pushURL}limit={limit}'
+        pushURL = f'{PushBullet.PUSHBULLET_API}/pushes?limit={limit}'
 
         if modifiedAfter is not None:
-            pushURL = '{}{}modified_after={}'.format(pushURL, '&' if limit is not None else '', PushBullet.__dateTimeToUnix(modifiedAfter))
+            pushURL = '{}modified_after={}'.format(pushURL, PushBullet.__dateTimeToUnix(modifiedAfter))
 
         response = requests.get(
             pushURL,
@@ -226,34 +276,25 @@ class PushBullet:
         pushes = []
         for push in resp['pushes']:
             ty = PushBullet.getPushType(push['type'])
-            retPush = {
-                'type': ty,
-                'title': push.get('title'),
-                'url': push.get('url'),
-                'body': push.get('body'),
-            }
+            pobj = None
+            if ty == PushType.TEXT or ty == PushType.LINK:
+                pobj = PushObject(ty, title=push.get('title'), url=push.get('url'), body=push.get('body'))
 
-            if ty == PushBullet.PushType.FILE:
-                # need to get file contents
-                fileBinary = requests.get(push['file_url']).content
-
+            elif ty == PushType.FILE:
                 # its text that was larger than limit so pushed as file
                 # automatically push to text
                 if push['file_name'] == 'Pushed Text.txt':
-                    retPush = {
-                        'type': PushBullet.PushType.TEXT,
-                        'title': push.get('title'),
-                        'body': fileBinary.decode()
-                    }
+                    resp = requests.get(push['file_url'])
+                    fileBinary = resp.content
+                    pobj = PushObject(PushType.TEXT, title=push.get('title'), body=fileBinary)
+
                 else:
-                    retPush = {
-                        'type': PushBullet.PushType.FILE,
-                        'url': push['file_url'],
-                        'name': push['file_name'],
-                        'content': fileBinary
-                    }
-            
-            pushes.append(retPush)
+                    pobj = PushObject(PushType.TEXT, title=push.get('title'), body=push.get('body'), filename=push['file_name'], fileURL=push['file_url'])
+
+            else:
+                raise Exception(f'Unhandled Push Type: "{ty}"')
+
+            pushes.append(pobj)
         return pushes
     
     
