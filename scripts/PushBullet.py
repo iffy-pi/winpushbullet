@@ -289,7 +289,7 @@ class PushBullet:
                     pobj = PushObject(PushType.TEXT, title=push.get('title'), body=fileBinary)
 
                 else:
-                    pobj = PushObject(PushType.TEXT, title=push.get('title'), body=push.get('body'), filename=push['file_name'], fileURL=push['file_url'])
+                    pobj = PushObject(PushType.FILE, title=push.get('title'), body=push.get('body'), filename=push['file_name'], fileURL=push['file_url'])
 
             else:
                 raise Exception(f'Unhandled Push Type: "{ty}"')
