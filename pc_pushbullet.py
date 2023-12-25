@@ -1,63 +1,63 @@
 # pull from clip board first, doing it immediately to improve script speed
-from config.userconfig import TEMP_DIRECTORY
-import win32clipboard as cb
-CLIPBOARD_ITEM = None
-imageInClipboard = False
-
-cb.OpenClipboard()
-FILE_PATH_POINTER_IN_CLIPBOARD = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
-
-if FILE_PATH_POINTER_IN_CLIPBOARD:
-    # get the file path as the clipboard item
-    CLIPBOARD_ITEM = cb.GetClipboardData(cb.CF_HDROP)[0]
-else:
-    # try to get thing copied to clipboard
-    # causes exception if an image is copied e.g. like a screenshot
-    try:
-        CLIPBOARD_ITEM = cb.GetClipboardData()
-    except TypeError:
-        CLIPBOARD_ITEM = None
-        imageInClipboard = True
-cb.CloseClipboard()
-
-if imageInClipboard:
-    # screenshots copied to clipboard cause this exception
-    # grab the screenshow with Pillow, save to file and return the file handler
-    from PIL import ImageGrab
-    tempSc = f"{TEMP_DIRECTORY}\\screenshot.png"
-    img = ImageGrab.grabclipboard()
-    img.save(tempSc)
-    CLIPBOARD_ITEM = tempSc
-    FILE_PATH_POINTER_IN_CLIPBOARD = True
-
 import sys
-import os
+from os import path
+import win32clipboard as cb
+from enum import Enum
+from contextlib import contextmanager
 
-script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
-if script_loc_dir not in sys.path:  
+script_loc_dir = path.split(path.realpath(__file__))[0]
+if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
+from config.userconfig import TEMP_DIRECTORY
+from scripts.PushBullet import PushType
 from scripts.shared import checkFlags, getPushBullet, isLink, setHeadless, notify
 
-TEXT = 0
-LINK = 1
-FILE = 2
-        
-def determineType(content, inferFileAllowed=False):
-    if inferFileAllowed:
-        # infer if it is a file path and then make file
-        path = content
-        for q in [ '"', "'" ]:
-            if path[0] == q:
-                path = path[1:-1]
-        
-        if os.path.exists(path):
-            return FILE
+class ClipboardContentType(Enum):
+    FILE_PATH = 0
+    TEXT = 1
 
-    # infer if it is a link
-    if isLink(content):
-            return LINK
+PUSHING_IMAGE_COPIED_TO_CLIPBOARD = False
 
-    return TEXT
+@contextmanager
+def clipboardOpen():
+    cb.OpenClipboard()
+    try:
+        yield None
+    finally:
+        cb.CloseClipboard()
+
+def getClipboardContent():
+    """
+    Gets the contents in the clipboard
+    :return: (content, type) : Where content is the clipboard data and a type is a clipboard data type
+    """
+
+    with clipboardOpen():
+        contentIsFilePointer = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
+        if contentIsFilePointer:
+            # get the file path as the clipboard item
+            item = cb.GetClipboardData(cb.CF_HDROP)[0]
+            return item, ClipboardContentType.FILE_PATH
+
+        # try to get thing copied to clipboard
+        # causes exception if an image is copied e.g. like a screenshot
+        try:
+            item = cb.GetClipboardData()
+            return item, ClipboardContentType.TEXT
+        except TypeError:
+            pass
+
+    # Handle the image by saving it to a temp file and then returning the file path as the clipboard item
+    # Also set global var
+    global PUSHING_IMAGE_COPIED_TO_CLIPBOARD
+    PUSHING_IMAGE_COPIED_TO_CLIPBOARD = True
+
+    from PIL import ImageGrab
+    tempImagePath = f"{TEMP_DIRECTORY}\\screenshot.png"
+    img = ImageGrab.grabclipboard()
+    img.save(tempImagePath)
+
+    return tempImagePath, ClipboardContentType.FILE_PATH
 
 def latestFileInTemp():
     import glob
@@ -66,81 +66,87 @@ def latestFileInTemp():
     list_of_files = glob.glob(f'{dd}\\*')
     # get the c time of each file and use that as the key to order the list
     # and identify the maximum
-    latest_file = max(list_of_files, key=os.path.getmtime)
-    return os.path.join(dd, latest_file)
+    latest_file = max(list_of_files, key=path.getmtime)
+    return path.join(dd, latest_file)
 
 def doPush(pushType, item:str):
     pb = getPushBullet()
     match pushType:
-        case 0: # TEXT
+        case PushType.TEXT: # TEXT
             pb.pushText(item)
             notify(
                 'Text pushed successfully',
                 item
             )
 
-        case 1: # LINK
+        case PushType.LINK: # LINK
             pb.pushLink(item)
             notify(
                 'Link pushed successfully',
                 item
             )
 
-        case 2: # FILE
+        case PushType.FILE: # FILE
             filepath = item.replace('"', '').replace("'", "")
 
             pb.pushFile(filepath)
 
-            if imageInClipboard:
+            if PUSHING_IMAGE_COPIED_TO_CLIPBOARD:
                 notify(
                     'Copied Image pushed successfully'
                 )
             else:
                 notify(
-                    'File {} pushed succcessfully'.format(os.path.split(filepath)[1]),
+                    'File {} pushed succcessfully'.format(path.split(filepath)[1]),
                     f'Filepath: {item}'
                 )
 
 
 def main():
+    headless = True
     try:
         args = sys.argv[1:]
-        
-        headless = False
 
         # check for flags
         contentArgs = list(args)
-        headless, forceText, filePathCopied, useLatestTempFile, filePathArgument, textArgument = checkFlags(args, 
+        headless, forceText, filePathCopied, useLatestTempFile, hasFilePathArgument, hasTextArgument , testing= checkFlags(args,
             flags=("--headless", "--forceText", "--filePathCopied", "--latestTempFile", 
-                "--filePathArgument", "--textArgument"))
+                "-filePathArgument", "-textArgument", "--testing"))
+
         setHeadless(headless)
 
-        item = CLIPBOARD_ITEM
+        item, itemType = None, None
         pushType = -1
 
-        if filePathArgument or textArgument:
+        if hasFilePathArgument or hasTextArgument:
             item = args[0]
+        else:
+            item, itemType = getClipboardContent()
 
         # check if there is content to push
         if item is None or item == '':
             notify("No content to push")
             return 0
 
-        # apply arguments
-        if forceText or textArgument:
+        # Use arguments to get the push type
+        if forceText or hasTextArgument:
             # treat anything copied as text
-            pushType = TEXT
+            pushType = PushType.TEXT
         
-        elif filePathCopied or FILE_PATH_POINTER_IN_CLIPBOARD or filePathArgument:
-            pushType = FILE
+        elif hasFilePathArgument or filePathCopied or itemType == ClipboardContentType.FILE_PATH:
+            pushType = PushType.FILE
         
         elif useLatestTempFile:
             # pushing latest file in temp
             item = latestFileInTemp()
-            pushType = FILE
+            pushType = PushType.FILE
 
+        # If we still havent determined the type, it will either be text or link
         if pushType == -1:
-            pushType = determineType(item, inferFileAllowed=False)
+            if itemType == ClipboardContentType.TEXT:
+                pushType = PushType.LINK if isLink(item) else PushType.TEXT
+            else:
+                raise Exception('Unknown PushType for Copied Item')
 
         doPush(pushType, item)    
     except Exception as e:

@@ -23,7 +23,7 @@ def addContextMenuRegistry(folderPath, optionName, commandStr, icon=None):
 def addPushFileToContextMenu(scriptPath, icon):
     folderPath = SELECTED_FILE_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push File"
     optionName = 'Push File'
-    commandStr = f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--filePathArgument" "%1"'
+    commandStr = f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-filePathArgument" "%1"'
     addContextMenuRegistry(folderPath, optionName, commandStr, icon=icon)
 
 
@@ -31,14 +31,14 @@ def addPushDirPathToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Current Directory Path",
         'Push Path of Current Directory',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--textArgument" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-textArgument" "%V"',
         icon=icon
     )
     # also add one when the directory is selected
     addContextMenuRegistry(
         SELECTED_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Directory Path",
         'Push Directory Path',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--textArgument" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-textArgument" "%V"',
         icon=icon
     )
 
@@ -47,7 +47,7 @@ def addPullFileToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File",
         'Pull File To Here',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--strictlyFile" "--saveToDir" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDir" "%V"',
         icon=icon
     )
 
@@ -56,7 +56,7 @@ def addPullFileRenameToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File And Rename",
         'Pull File To Here and Rename...',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--strictlyFile" "--saveToDirAndRename" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDirWithDlg" "%V"',
         icon=icon
     )
 

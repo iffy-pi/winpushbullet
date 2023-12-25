@@ -24,33 +24,65 @@ def setHeadless(val):
     global HEADLESS
     HEADLESS = val
 
-def checkFlags(args:list, flag:str = "", flags:tuple=()):  
-    usedList = False
-    if len(flags) == 0:
+def checkFlags(args:list[str], flag:str=None, flags:tuple=None):
+    """
+    Checks the passed in args for the given flags
+    If a flag is found, it is removed from the list of arguments
+    :param args: The list of command line arguments
+    :param flag: One flag to check against
+    :param flags: A tuple of command line flags to check
+    :return: If the flag argument is used, it returns a boolean value for if the flag is in the command line arguments
+            If the flags argument is ued, it returns a tuple of boolean values,
+            where boolean value at index i, corresponds to if flags[i] is in the command line
+    """
+
+    listOfFlagsPassedIn = flags is not None
+
+    if not listOfFlagsPassedIn:
+        if flag is None:
+            raise Exception('No flags to parse!')
         flags = flag,
-    else:
-        usedList = True
 
-    results = []
+    results = [ False ] * len(flags)
 
-    for fl in flags:
-        res = False
-        try:
-            flInd = args.index(fl)
-            # flag is in args lsit
-            res = True
+    for i, fl in enumerate(flags):
+        if fl not in args:
+            continue
 
-            # remove flag from list
-            args.pop(flInd)    
-        except ValueError:
-            pass
+        # find the flag index in the list
+        flInd = args.index(fl)
+        results[i] = True
+        # remove flag from list
+        args.pop(flInd)
 
-        results.append(res)
-
-    if not usedList and len(results) == 1:
+    if not listOfFlagsPassedIn and len(results) == 1:
         return results[0]
     
     return tuple(results)
+
+def getArgumentForFlag(args:list[str], flag:str) -> str|None:
+    """
+    Returns an argument associated with a given flag,
+    Expects that a flag argument comes immediately after the flag itself
+    If the flag is found and argument is found, then both are removed from list of arguments
+    :param args: The list of command line arguments
+    :param flag: The flag to check against
+    :return: Returns the found argument or None if no argument is found
+    """
+    if flag not in args:
+        return None
+
+    flIndex = args.index(flag)
+    argIndex = flIndex + 1
+
+    if argIndex >= len(args):
+        return None
+
+    arg = args[argIndex]
+
+    args.pop(argIndex)
+    args.pop(flIndex)
+    return arg
 
 def scriptErrNotif(errorObj, logFilePath):
     notif("An error occured", body=str(errorObj), label="See log file", filePath=logFilePath)

@@ -6,22 +6,22 @@ SetWorkingDir, %A_ScriptDir%
 
 ; Ctrl + Alt + [ : Pull Content (Default)
 ^![:: ;Ctrl+Alt+[
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "-behaviour" "default"
     return
 
 ; Ctrl + Alt + ; : Pull Content (Copy)
 ^!;:: ;Ctrl+Alt+;
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "--strictlyCopy"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "-behaviour" "copy"
     return
 
-; Ctrl + Alt + . : Pull Content (Browser)
+; Ctrl + Alt + . : Pull Content (View)
 ^!.:: ;Ctrl+Alt+.
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "--strictlyBrowser"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "-behaviour" "view"
     return
 
 ; Ctrl + Alt + , : Pull Content (Save To File)
 ^!,:: ;Ctrl+Alt+,
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "--strictlyFile"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pullbullet.py" "--headless" "-behaviour" "save" "--handleAsFile"
     return
 
 ; Ctrl + Alt + ] : Push Content (Default)

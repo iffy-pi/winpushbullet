@@ -19,7 +19,7 @@ Each below command retrieves the last push made to PushBullet and performs diffe
 
 - Default: `Ctrl + Alt + [`
     - Text is copied to clipboard
-    - URLs are opened in your configured browser (`configs.userconfig.BROWSER_EXECUTABLE_PATH`)
+    - URLs are opened in your default web browser
     - Image files (jpeg, jpg and png) are copied to clipboard
     - Other files are handled with a Save File dialog
 - Copy Content: `Ctrl + Alt + ;`
@@ -29,8 +29,8 @@ Each below command retrieves the last push made to PushBullet and performs diffe
     - Other files are handled with a Save File dialog
 - Open In Browser: `Ctrl + Alt + > `
     - Text is copied to clipboard
-    - URLs are opened in your configured browser
-    - All files are opened in your configured browser
+    - URLs are opened in your default web browser
+    - All files are opened in your default web browser
 - Save Content To File: `Ctrl + Alt + <`
     - Text is saved as a text file with a Save File Dialog
     - URLs are saved as a text file with a Save File Dialog
@@ -142,3 +142,56 @@ pc_pullbullet
 - `--strictlyFile` : All files are presented with save file dialog, text and URLs are saved as text files with save dialog
 - `--saveToDir <arg>` : Saves the pushed file in the directory specified with `<arg>`
 - `--saveToDirAndRename <arg>` : Presents the Save File dialog for the pushed file, opened to the directory specified with `<arg>`
+
+
+```
+pc_pullbullet
+[--headless] [--handleAsFile]
+[-behaviour <behaviour string>]
+[-saveToDir <directory path>] [-saveToDirWithDlg <directory path>]
+```
+
+- `--headless`
+    - When used, the script will run windowless, communicating only through Windows notifications
+- `--handleAsFile`
+    - This will force all other push types (text, url) to be treated as if they were a pushed file.
+        - Text pushes are treated as text files
+        - URL pushes are treated as text files
+- `-saveToDir <directory path>]`
+    - Specifies the directory to save a pushed file to
+    - Overrides the save file method (see behaviour below)
+- `-saveToDirWithDlg <directory path>]`
+    - Specifies the directory to open File Explorer Save Dialog to
+    - Overrides the save file method (see behaviour below)
+- `-behaviour <behaviour string>`
+    - This specifies the behaviour to be used by the script. A behaviour specifies the way a push type is handled by the script.
+    - If not specified, the `default` behaviour will be used
+    - Note:
+        - If the `--handleAsFile` flag is used, text and URL pushes will be treated as text file pushes
+        - If `N/A` is listed for a given type under a behaviour, the way it is handled will be the way specified in the default behaviour
+        - The save file method is how we handle saving a given file. There is a default method, but it can be overridden with script flags.
+            - Default: Save using a file explorer dialog opened to default location
+            - Save To Directory: (specified with `-saveToDir` flag) Saves the file to a specified directory
+              - If there is already a file with the pushed file name in that directory, the file explorer dialog will be given to allow the user to rename the file
+            - Save To Directory with Dialog: (specified with `-saveToDirWithDlg` flag) Opens File Explorer Dialog in the specified directory
+    - Available Behaviour Types:
+        - Default: `default`
+            - Text        : Copied to clipboard
+            - URLs        : Opened in browser
+            - Image Files : (png,jpg) Copied to clipboard
+            - Other Files : Saved using the save file method
+        - Copy Only: `copy`
+            - Text        : Copied to clipboard
+            - URLs        : Copied to clipboard
+            - Image Files : Copied to clipboard
+            - Other Files : N/A
+        - View Content: `view`
+            - Text        : A temporary text file is created and opened
+            - URLs        : Opened in browser
+            - Image Files : Opened in browser
+            - Other Files : Opened in browser
+        - Save Files: `save`
+            - Text        : Text is treated as text file (same as using `--handleAsFile`)
+            - URLs        : Link is treated as text file (same as using `--handleAsFile`)
+            - Image Files : Saved using the save file method 
+            - Other Files : Saved using the save file method
