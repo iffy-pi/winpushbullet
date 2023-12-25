@@ -121,29 +121,7 @@ pc_pushbullet
 - `--textArgument <arg>` : Treat `<arg>` as raw text
 
 ### `pc_pullbullet.py`
-This is the script used to get content from PushBullet onto the computer. It is designed to get the latest push from PushBullet and handles the content based on its type. The default behaviour (no flag behaviour changes) for the types:
-
-- Text is copied to the clipboard
-- Links are opened in the browser (Brave)
-- Image files (jpegs, pngs, gifs) are copied to the clipboard
-- Other files are presented with a Save File Dialog
-
-Flags are used to override the default behaviour:
-
-```
-pc_pullbullet
-[--headless] [--strictlyCopy] [--strictlyBrowser] [--strictlyFile] 
-[--saveToDir <arg>] [--saveToDirAndRename <arg>]
-```
-
-- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
-- `--strictlyCopy` : All text, files and links are copied to the clipboard
-- `--strictlyBrowser` : Text is copied to the clipboard but all files and links are opened in the browser.
-- `--strictlyFile` : All files are presented with save file dialog, text and URLs are saved as text files with save dialog
-- `--saveToDir <arg>` : Saves the pushed file in the directory specified with `<arg>`
-- `--saveToDirAndRename <arg>` : Presents the Save File dialog for the pushed file, opened to the directory specified with `<arg>`
-
-
+This is the script used to get content from PushBullet onto the computer. It is designed to get the latest push from PushBullet and handles the content based on its type.
 ```
 pc_pullbullet
 [--headless] [--handleAsFile]
