@@ -11,8 +11,8 @@ If you configure the system (see Configure section below), you will have access 
     - Infers text, link, file or file from copied file path
 - Push As Text: `Ctrl + Alt + '`
     - Gets content from clipboard, and push as text
-- Push From Temp Directory: `Ctrl + Alt + /`
-    - Pushes latest file in specified directory `configs.userconfig.TEMP_DIRECTORY`
+- Push File URI: `Ctrl + Alt + /`
+    - Treats contents of the clipboard as a file URI, converts it to a file path and pushes the specified file
 
 ### Pulling Content HotKeys
 Each below command retrieves the last push made to PushBullet and performs different actions based on what the push type is: text, link/url, and file:
@@ -109,15 +109,17 @@ The current specification:
 
 ```
 pc_pushbullet 
-[--headless] [--forceText] [--filePathCopied] [--latestTempFile] 
+[--headless] [--forceText] [--filePathCopied] [--fileURICopied] [--latestTempFile] [--isFileURI]
 [--filePathArgument <arg>] [--textArgument <arg>]
 ```
 
 - `--headless` : When used, the script will run windowless, communicating only through Windows notifications
 - `--forceText` : Treat the clipboard content only as text, no link or file inferring
 - `--filePathCopied` : Treat the clipboard content as a path for the file to be pushed
+- `--fileURICopied` : Treats th clipboard content as a file URI e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`, which is converted to the local file path and pushes the file at that path
 - `--latestTempFile` : Copy the latest file from C:\local\temp directory
 - `--filePathArgument <arg>` : Treat `<arg>` as path for the file to be pushed.
+    - `--isFileURI`: Used to indicate that the passed in file path is a file URI, that is a URL encoded file path e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`. The script will convert the URI to a file path.
 - `--textArgument <arg>` : Treat `<arg>` as raw text
 
 ### `pc_pullbullet.py`
