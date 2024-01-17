@@ -36,5 +36,5 @@ SetWorkingDir, %A_ScriptDir%
 
 ; Ctrl + Alt + / : Push Content (Temp)
 ^!/:: ;Ctrl+Alt+/
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--latestTempFile"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--fileURICopied"
     return
