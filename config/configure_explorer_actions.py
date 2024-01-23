@@ -23,7 +23,7 @@ def addContextMenuRegistry(folderPath, optionName, commandStr, icon=None):
 def addPushFileToContextMenu(scriptPath, icon):
     folderPath = SELECTED_FILE_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push File"
     optionName = 'Push File'
-    commandStr = f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-filePathArgument" "%1"'
+    commandStr = f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%1" "--file"'
     addContextMenuRegistry(folderPath, optionName, commandStr, icon=icon)
 
 
@@ -31,14 +31,14 @@ def addPushDirPathToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
         BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Current Directory Path",
         'Push Path of Current Directory',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-textArgument" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
         icon=icon
     )
     # also add one when the directory is selected
     addContextMenuRegistry(
         SELECTED_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Directory Path",
         'Push Directory Path',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-textArgument" "%V"',
+        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
         icon=icon
     )
 

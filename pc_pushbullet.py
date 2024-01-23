@@ -12,26 +12,16 @@ if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 from config.userconfig import TEMP_DIRECTORY
 from scripts.PushBullet import PushType
-from scripts.shared import checkFlags, getPushBullet, isLink, setHeadless, notify
-
-
-
-def uri_to_path(uri):
-    """
-    Takes a file URI e.g. file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf and converts it to a file URL
-    """
-    parsed = urlparse(uri)
-    host = "{0}{0}{mnt}{0}".format(path.sep, mnt=parsed.netloc)
-    return str(path.normpath(
-        path.join(host, url2pathname(unquote(parsed.path)))
-    ))
+from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify
 
 
 class ClipboardContentType(Enum):
     FILE_PATH = 0
     TEXT = 1
 
+
 PUSHING_IMAGE_COPIED_TO_CLIPBOARD = False
+
 
 @contextmanager
 def clipboardOpen():
@@ -40,6 +30,7 @@ def clipboardOpen():
         yield None
     finally:
         cb.CloseClipboard()
+
 
 def getClipboardContent():
     """
@@ -74,6 +65,36 @@ def getClipboardContent():
 
     return tempImagePath, ClipboardContentType.FILE_PATH
 
+
+def file_uri_to_file_path(uri):
+    """
+    Takes a file URI e.g. file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf and converts it to a file URL
+    """
+    try:
+        parsed = urlparse(uri)
+        host = "{0}{0}{mnt}{0}".format(path.sep, mnt=parsed.netloc)
+        filepath = str(path.normpath(
+            path.join(host, url2pathname(unquote(parsed.path)))
+        ))
+        return filepath if path.exists(filepath) else None
+    except Exception:
+        return None
+
+
+def is_file_uri(text: str):
+    if type(text) != str:
+        return False
+    return text.startswith('file:///')
+
+
+def sanitize_file_path(fp):
+    return fp.replace('"', '').replace("'", "")
+
+
+def valid_file_path(fp):
+    return path.exists(fp) and not path.isdir(fp)
+
+
 def latestFileInTemp():
     import glob
     # get the list of files in the log directory
@@ -84,29 +105,26 @@ def latestFileInTemp():
     latest_file = max(list_of_files, key=path.getmtime)
     return path.join(dd, latest_file)
 
-def doPush(pushType, item:str):
+
+def doPush(pushType, item: str):
     pb = getPushBullet()
     match pushType:
-        case PushType.TEXT: # TEXT
+        case PushType.TEXT:  # TEXT
             pb.pushText(item)
             notify(
                 'Text pushed successfully',
                 item
             )
 
-        case PushType.LINK: # LINK
+        case PushType.LINK:  # LINK
             pb.pushLink(item)
             notify(
                 'Link pushed successfully',
                 item
             )
 
-        case PushType.FILE: # FILE
-            filepath = item.replace('"', '').replace("'", "")
-
-            if not path.exists(filepath):
-                raise Exception(f'File "{filepath}" does not exist')
-
+        case PushType.FILE:  # FILE
+            filepath = item
             pb.pushFile(filepath)
 
             if PUSHING_IMAGE_COPIED_TO_CLIPBOARD:
@@ -120,65 +138,97 @@ def doPush(pushType, item:str):
                 )
 
 
+def infer_type(item):
+    if type(item) != str:
+        raise Exception('Unknown item type')
+
+    if isLink(item):
+        return item, PushType.LINK
+
+    # check if it is a file uri
+    if is_file_uri(item):
+        fp = file_uri_to_file_path(item)
+        if fp is not None:
+            return fp, PushType.FILE
+
+    # check if it can be evaluated to a file path
+    fp = sanitize_file_path(item)
+    if valid_file_path(fp):
+        return fp, PushType.FILE
+
+    # otherwise return as text
+    return item, PushType.TEXT
+
+
 def main():
     headless = True
     try:
         args = sys.argv[1:]
-
         # check for flags
-        contentArgs = list(args)
-        headless, forceText, filePathCopied, useLatestTempFile, hasFilePathArgument, hasTextArgument , argIsFileURI, fileURICopied, testing= checkFlags(args,
-            flags=("--headless", "--forceText", "--filePathCopied", "--latestTempFile","-filePathArgument", "-textArgument", "--isFileURI", "--fileURICopied", "--testing"))
+        headless, isText, itemIsLink, isFile, isLatestTempFile, convertFileURI, testing = checkFlags(
+            args,
+            flags=(
+                "--headless", "--text", "--link", "--file", "--latestTempFile", "--convertFileURI", "--testing"
+            ))
 
         setHeadless(headless)
+
+        argFlagValue = getArgumentForFlag(args, "-arg")
 
         item, itemContentType = None, None
         pushType = -1
 
-        if hasFilePathArgument or hasTextArgument:
-            item = args[0]
-            if argIsFileURI:
-                item = uri_to_path(item)
+        # default is copy to clipboard
+        if argFlagValue is not None:
+            item = argFlagValue
+
+        elif isLatestTempFile:
+            item = latestFileInTemp()
 
         else:
             item, itemContentType = getClipboardContent()
-
 
         # check if there is content to push
         if item is None or item == '':
             notify("No content to push")
             return 0
 
-        # Use arguments to get the push type
-        if forceText or hasTextArgument:
-            # treat anything copied as text
+        # If convert file URI is set, do it first
+        convertedURI = None
+        if (convertFileURI or isFile) and is_file_uri(item):
+            convertedURI = file_uri_to_file_path(item)
+            if convertedURI is not None:
+                item = convertedURI
+
+        # Set types
+        if isFile or isLatestTempFile or convertedURI is not None or itemContentType == ClipboardContentType.FILE_PATH:
+            item = sanitize_file_path(item)
+
+            if not valid_file_path(item):
+                raise Exception(f'Invalid file path: {item}')
+
+            pushType = PushType.FILE
+
+        elif itemIsLink:
+            pushType = PushType.LINK
+
+        elif isText:
             pushType = PushType.TEXT
-        
-        elif hasFilePathArgument or filePathCopied or itemContentType == ClipboardContentType.FILE_PATH:
-            pushType = PushType.FILE
-        
-        elif useLatestTempFile:
-            # pushing latest file in temp
-            item = latestFileInTemp()
-            pushType = PushType.FILE
 
-        elif fileURICopied:
-            item = uri_to_path(item)
-            pushType = PushType.FILE
+        else:
+            # default type inferencing
+            item, pushType = infer_type(item)
 
-        # If we still havent determined the type, it will either be text or link
-        if pushType == -1:
-            if itemContentType == ClipboardContentType.TEXT:
-                pushType = PushType.LINK if isLink(item) else PushType.TEXT
-            else:
-                raise Exception('Unknown PushType for Copied Item')
+        # print(f'Item: {item}')
+        # print(f'Type: {pushType}')
+        # input('')
+        doPush(pushType, item)
+        return 0
 
-        doPush(pushType, item)    
     except Exception as e:
         from scripts.shared import handleError
         handleError(e, headless)
 
-    
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -31,10 +31,10 @@ SetWorkingDir, %A_ScriptDir%
 
 ; Ctrl + Alt + ' : Push Content (Text)
 ^!':: ;Ctrl+Alt+'
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--forceText"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--text"
     return
 
-; Ctrl + Alt + / : Push Content (Temp)
+; Ctrl + Alt + / : Push Content (Link or File URI)
 ^!/:: ;Ctrl+Alt+/
-    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--fileURICopied"
+    Run, <PYTHON EXECUTABLE> "<PROJECT_ROOT>\pc_pushbullet.py" "--headless" "--link" "--convertFileURI"
     return

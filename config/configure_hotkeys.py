@@ -11,7 +11,8 @@ content = content.replace("<PROJECT_ROOT>", project_root)
 content = content.replace("<PYTHON EXECUTABLE>", python_exec)
 
 
-with open(os.path.join(project_root, 'config', 'hotkeys.ahk'), 'w') as file:
+hotKeyFile = os.path.join(project_root, 'config', 'hotkeys.ahk')
+with open(hotKeyFile, 'w') as file:
     file.write(content)
 
-print('Hotkeys Configured')
+print(f'Hotkeys Configured, outputted to {hotKeyFile}')

@@ -10,9 +10,10 @@ If you configure the system (see Configure section below), you will have access 
     - Gets content from clipboard and pushes to PushBullet
     - Infers text, link, file or file from copied file path
 - Push As Text: `Ctrl + Alt + '`
-    - Gets content from clipboard, and push as text
-- Push File URI: `Ctrl + Alt + /`
-    - Treats contents of the clipboard as a file URI, converts it to a file path and pushes the specified file
+    - Gets content from clipboard, and always pushes as text
+- Push Link or File URI: `Ctrl + Alt + /`
+    - Treats contents of the clipboard as a link
+    - If file URI is detected, it is treated as a file
 
 ### Pulling Content HotKeys
 Each below command retrieves the last push made to PushBullet and performs different actions based on what the push type is: text, link/url, and file:
@@ -109,18 +110,54 @@ The current specification:
 
 ```
 pc_pushbullet 
-[--headless] [--forceText] [--filePathCopied] [--fileURICopied] [--latestTempFile] [--isFileURI]
+[--headless] [--forceText] [--filePathCopied]
+[--convertFileURI][--linkCopied] [--latestTempFile]
 [--filePathArgument <arg>] [--textArgument <arg>]
 ```
 
 - `--headless` : When used, the script will run windowless, communicating only through Windows notifications
 - `--forceText` : Treat the clipboard content only as text, no link or file inferring
+- `--linkCopied`: Treat the clipboard content as a URL
 - `--filePathCopied` : Treat the clipboard content as a path for the file to be pushed
-- `--fileURICopied` : Treats th clipboard content as a file URI e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`, which is converted to the local file path and pushes the file at that path
 - `--latestTempFile` : Copy the latest file from C:\local\temp directory
 - `--filePathArgument <arg>` : Treat `<arg>` as path for the file to be pushed.
-    - `--isFileURI`: Used to indicate that the passed in file path is a file URI, that is a URL encoded file path e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`. The script will convert the URI to a file path.
+- `--convertFileURI`: Used to indicate that the item to push (either gotten from the clipboard or passed in as an argument) can be converted from a file URI (e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`) to a file path, and push the resulting path.
+    - If the conversion is not successful, the push type is inferred by the script
+    - Note if `--forceText` is also used, file URI will not be converted
 - `--textArgument <arg>` : Treat `<arg>` as raw text
+
+```
+pc_pushbullet 
+[--clip] [-arg <arg>]
+[--text] [--link] [--file]
+[--headless]
+
+[--forceText] [--filePathCopied]
+[--convertFileURI] [--linkCopied] [--latestTempFile]
+[--filePathArgument <arg>] [--textArgument <arg>]
+```
+
+- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
+- Argument Options:
+    - Default push item is the item in the clipboard. To override this you have the following:
+    - `-arg <arg>`: Push item is the passed in argument (O)
+    - `--latestTempFile`: Push item is the latest file in the temporary directory
+- Type Flags:
+    - Default, script infers type
+        - Treats as file if file path is found
+        - Treats as link if it goes to a URL
+        - Treats as text for every other case
+        - If file URI is copied, it is converted to a file path for a file to be pushed
+            - If the file does not exist or is invalid, it will not be changed and instead be pushed as text
+    - `--text`: Treats the push item as a text
+        - This will disable file URI conversions, to enable them use `--convertFileURI`
+    - `--link`: Treats the push item as a link
+        - This will disable file URI conversions, to enable them use `--convertFileURI`
+    - `--file`: Treats the push item as a path to the file to be pushed
+- Modifier flags:
+    - `--convertFileURI`: If a file URI is detected as the push item, it will be converted to a file path and will push the resulting file.
+        - If the conversion fails or the converted file path does not exist, the item will not be overridden, the other flags passed in will determine what is done with the item
+
 
 ### `pc_pullbullet.py`
 This is the script used to get content from PushBullet onto the computer. It is designed to get the latest push from PushBullet and handles the content based on its type.
