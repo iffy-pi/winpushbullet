@@ -128,7 +128,7 @@ pc_pushbullet
 
 ```
 pc_pushbullet 
-[--clip] [-arg <arg>]
+[--clip] [-arg <arg>] [-staging <directory path>]
 [--text] [--link] [--file]
 [--headless]
 
@@ -142,6 +142,7 @@ pc_pushbullet
     - Default push item is the item in the clipboard. To override this you have the following:
     - `-arg <arg>`: Push item is the passed in argument (O)
     - `--latestTempFile`: Push item is the latest file in the temporary directory
+    - `-staging <directory path>`: Takes the latest item in the directory, pushes it as a file and then deletes the file.
 - Type Flags:
     - Default, script infers type
         - Treats as file if file path is found

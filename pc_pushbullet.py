@@ -1,6 +1,6 @@
 # pull from clip board first, doing it immediately to improve script speed
 import sys
-from os import path
+from os import path, remove
 import win32clipboard as cb
 from enum import Enum
 from contextlib import contextmanager
@@ -95,18 +95,28 @@ def valid_file_path(fp):
     return path.exists(fp) and not path.isdir(fp)
 
 
-def latestFileInTemp():
+def lastChangedFileInDir(folder: str):
+    """
+    Returns the latest file in the folder, if no files are in the directory then it returns none
+    """
     import glob
     # get the list of files in the log directory
-    dd = TEMP_DIRECTORY
-    list_of_files = glob.glob(f'{dd}\\*')
+    list_of_files = glob.glob(f'{folder}\\*')
+
+    if len(list_of_files) == 0:
+        return None
+
     # get the c time of each file and use that as the key to order the list
     # and identify the maximum
     latest_file = max(list_of_files, key=path.getmtime)
-    return path.join(dd, latest_file)
+    return path.join(folder, latest_file)
 
 
-def doPush(pushType, item: str):
+def latestFileInTemp():
+    return lastChangedFileInDir(TEMP_DIRECTORY)
+
+
+def doPush(pushType, item: str, pushingStagingFile=False):
     pb = getPushBullet()
     match pushType:
         case PushType.TEXT:  # TEXT
@@ -131,6 +141,15 @@ def doPush(pushType, item: str):
                 notify(
                     'Copied Image pushed successfully'
                 )
+
+            elif pushingStagingFile:
+                # notify and delete staging file
+                remove(filepath)
+                notify(
+                    'File {} pushed successfully from staging'.format(path.split(filepath)[1]),
+                    'The file has been deleted from staging'
+                )
+
             else:
                 notify(
                     'File {} pushed succcessfully'.format(path.split(filepath)[1]),
@@ -165,7 +184,7 @@ def main():
     try:
         args = sys.argv[1:]
         # check for flags
-        headless, isText, itemIsLink, isFile, isLatestTempFile, convertFileURI, testing = checkFlags(
+        headless, isText, itemIsLink, isFile, pushLatestTempFile, convertFileURI, testing = checkFlags(
             args,
             flags=(
                 "--headless", "--text", "--link", "--file", "--latestTempFile", "--convertFileURI", "--testing"
@@ -174,6 +193,23 @@ def main():
         setHeadless(headless)
 
         argFlagValue = getArgumentForFlag(args, "-arg")
+        stagingDir = getArgumentForFlag(args, '-staging')
+        stagingFile = None
+        latestTempFile = None
+
+        if stagingDir is not None:
+            if not path.exists(stagingDir):
+                raise Exception(f'Staging directory: "{stagingDir}" does not exist')
+
+            stagingFile = lastChangedFileInDir(stagingDir)
+            if stagingFile is None:
+                raise Exception(f'No file found in staging directory: "{stagingDir}"')
+
+        if pushLatestTempFile:
+            latestTempFile = latestFileInTemp()
+            if latestTempFile is None:
+                raise Exception(f'No file in temp directory: {TEMP_DIRECTORY} to push')
+
 
         item, itemContentType = None, None
         pushType = -1
@@ -182,8 +218,11 @@ def main():
         if argFlagValue is not None:
             item = argFlagValue
 
-        elif isLatestTempFile:
-            item = latestFileInTemp()
+        elif stagingFile is not None:
+            item = stagingFile
+
+        elif latestTempFile is not None:
+            item = latestTempFile
 
         else:
             item, itemContentType = getClipboardContent()
@@ -200,8 +239,14 @@ def main():
             if convertedURI is not None:
                 item = convertedURI
 
+
         # Set types
-        if isFile or isLatestTempFile or convertedURI is not None or itemContentType == ClipboardContentType.FILE_PATH:
+        if (isFile or
+                latestTempFile is not None or
+                stagingFile is not None or
+                convertedURI is not None or
+                itemContentType == ClipboardContentType.FILE_PATH):
+
             item = sanitize_file_path(item)
 
             if not valid_file_path(item):
@@ -221,8 +266,10 @@ def main():
 
         # print(f'Item: {item}')
         # print(f'Type: {pushType}')
+        # print(stagingFile)
+        # print(stagingDir)
         # input('')
-        doPush(pushType, item)
+        doPush(pushType, item, pushingStagingFile=stagingFile is not None)
         return 0
 
     except Exception as e:
