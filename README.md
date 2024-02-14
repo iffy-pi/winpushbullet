@@ -5,6 +5,21 @@ This involves sharing of text, links and files quickly between the Apple device 
 
 ## Functions and Features
 If you configure the system (see Configure section below), you will have access to the following functions.
+
+### Hotkeys
+
+![Hotkey Picture](/docs/media/hotkey_picture.png?raw=true "Hotkey Picture")
+
+| No. | Hotkey           | Title                               | Description                                                                                                               |
+|-----|------------------|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| 1   | `Ctrl`+`Alt`+`[` | Pull content to clipboard           | Copies text, links and images to clipboard.                                                                               |
+| 2   | `Ctrl`+`Alt`+`]` | Push content on clipboard           | Push clipboard content, infers file from file path or file URI                                                            |
+| 3   | `Ctrl`+`Alt`+`;` | Pull and Paste                      | Pulls content from clipboard, and pastes by using Ctrl+V                                                                  |
+| 4   | `Ctrl`+`Alt`+`'` | Copy and Push                       | Copies content with Ctrl+C, and then pushes copied content                                                                |
+| 5   | `Ctrl`+`Alt`+`,` | Save to File                        | Opens Save File Dialog for pushed text, links and files                                                                   |
+| 6   | `Ctrl`+`Alt`+`.` | View Content                        | Opens text in default text editor, opens links and files in browser                                                       |
+| 7   | `Ctrl`+`Alt`+`/` | Push Browser URL (Brave and Chrome) | Selects browser URL with Alt+D, copies it with Ctrl+C, and pushes it. If valid file URI, file being pointed to is pushed. |
+
 ### Pushing Content HotKeys
 - Default: `Ctrl + Alt + ]`
     - Gets content from clipboard and pushes to PushBullet
@@ -91,7 +106,7 @@ Run `config/save_access_token.py` and paste your access token when you are promp
 Populate all the fields in `config/userconfig.py` with relevant paths on your system
 
 ### Configure Explorer Context Menu Actions
-Run the script `config/configure_explorer_actions.py` **as an administator** to add the explorer context menu actions.
+Run the script `config/configure_explorer_actions.py` **as an administrator** to add the explorer context menu actions.
 
 ### Configure HotKeys
 Firstly, run `config.configure_hotkeys.py`. This will generate a `hotkeys.ahk` in config/ file which maps the hotkeys specified above to the appropriate script calls.
@@ -107,25 +122,6 @@ Double click `hotkeys.ahk` to run the file. You can also configure it to run on 
 This script is used to push content from the computer to PushBullet. The script reads the content of the clipboard and pushes it as text, URL or file based on the clipboard content type.
 
 The current specification:
-
-```
-pc_pushbullet 
-[--headless] [--forceText] [--filePathCopied]
-[--convertFileURI][--linkCopied] [--latestTempFile]
-[--filePathArgument <arg>] [--textArgument <arg>]
-```
-
-- `--headless` : When used, the script will run windowless, communicating only through Windows notifications
-- `--forceText` : Treat the clipboard content only as text, no link or file inferring
-- `--linkCopied`: Treat the clipboard content as a URL
-- `--filePathCopied` : Treat the clipboard content as a path for the file to be pushed
-- `--latestTempFile` : Copy the latest file from C:\local\temp directory
-- `--filePathArgument <arg>` : Treat `<arg>` as path for the file to be pushed.
-- `--convertFileURI`: Used to indicate that the item to push (either gotten from the clipboard or passed in as an argument) can be converted from a file URI (e.g. `file:///C:/Users/omnic/local/temp/Payment%20Proof.pdf`) to a file path, and push the resulting path.
-    - If the conversion is not successful, the push type is inferred by the script
-    - Note if `--forceText` is also used, file URI will not be converted
-- `--textArgument <arg>` : Treat `<arg>` as raw text
-
 ```
 pc_pushbullet 
 [--clip] [-arg <arg>] [-staging <directory path>]
@@ -202,7 +198,7 @@ pc_pullbullet
             - Text        : Copied to clipboard
             - URLs        : Copied to clipboard
             - Image Files : Copied to clipboard
-            - Other Files : N/A
+            - Other Files : N/A (Handled with `default` behaviour)
         - View Content: `view`
             - Text        : A temporary text file is created and opened
             - URLs        : Opened in browser
