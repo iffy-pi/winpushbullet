@@ -43,7 +43,7 @@ def openTextWithOS(text:str):
         file.write(text)
     os.startfile(tempFile, "open")
 
-def copyImageToClipboard(fileExt, fileContent):
+def copyImageToClipboard(fileExt, fileContent: bytes):
     # save the image to a temp file
     tempFile = f"{TEMP_DIRECTORY}\\temp." + fileExt
     with open(tempFile, 'wb') as file:

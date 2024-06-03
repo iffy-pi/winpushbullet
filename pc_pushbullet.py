@@ -19,10 +19,6 @@ class ClipboardContentType(Enum):
     FILE_PATH = 0
     TEXT = 1
 
-
-PUSHING_IMAGE_COPIED_TO_CLIPBOARD = False
-
-
 @contextmanager
 def clipboardOpen():
     cb.OpenClipboard()
@@ -35,35 +31,35 @@ def clipboardOpen():
 def getClipboardContent():
     """
     Gets the contents in the clipboard
-    :return: (content, type) : Where content is the clipboard data and a type is a clipboard data type
+    :return: (content, type, bool) : Where content is the clipboard data and a type is a clipboard data type,
+    bool -> If pushing an image copied to the clipboard
     """
+
+    pushingCopiedImage = False
 
     with clipboardOpen():
         contentIsFilePointer = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
         if contentIsFilePointer:
             # get the file path as the clipboard item
             item = cb.GetClipboardData(cb.CF_HDROP)[0]
-            return item, ClipboardContentType.FILE_PATH
+            return item, ClipboardContentType.FILE_PATH, pushingCopiedImage
 
         # try to get thing copied to clipboard
         # causes exception if an image is copied e.g. like a screenshot
         try:
             item = cb.GetClipboardData()
-            return item, ClipboardContentType.TEXT
+            return item, ClipboardContentType.TEXT, pushingCopiedImage
         except TypeError:
             pass
 
-    # Handle the image by saving it to a temp file and then returning the file path as the clipboard item
-    # Also set global var
-    global PUSHING_IMAGE_COPIED_TO_CLIPBOARD
-    PUSHING_IMAGE_COPIED_TO_CLIPBOARD = True
+    pushingCopiedImage = True
 
     from PIL import ImageGrab
     tempImagePath = f"{TEMP_DIRECTORY}\\screenshot.png"
     img = ImageGrab.grabclipboard()
     img.save(tempImagePath)
 
-    return tempImagePath, ClipboardContentType.FILE_PATH
+    return tempImagePath, ClipboardContentType.FILE_PATH, pushingCopiedImage
 
 
 def file_uri_to_file_path(uri):
@@ -116,7 +112,7 @@ def latestFileInTemp():
     return lastChangedFileInDir(TEMP_DIRECTORY)
 
 
-def doPush(pushType, item: str, pushingStagingFile=False):
+def doPush(pushType, item: str, pushingStagingFile=False, pushingCopiedImage=False):
     pb = getPushBullet()
     match pushType:
         case PushType.TEXT:  # TEXT
@@ -137,7 +133,7 @@ def doPush(pushType, item: str, pushingStagingFile=False):
             filepath = item
             pb.pushFile(filepath)
 
-            if PUSHING_IMAGE_COPIED_TO_CLIPBOARD:
+            if pushingCopiedImage:
                 notify(
                     'Copied Image pushed successfully'
                 )
@@ -212,6 +208,7 @@ def main():
 
 
         item, itemContentType = None, None
+        pushingCopiedImage = False
         pushType = -1
 
         # default is copy to clipboard
@@ -225,7 +222,7 @@ def main():
             item = latestTempFile
 
         else:
-            item, itemContentType = getClipboardContent()
+            item, itemContentType, pushingCopiedImage = getClipboardContent()
 
         # check if there is content to push
         if item is None or item == '':
@@ -269,7 +266,7 @@ def main():
         # print(stagingFile)
         # print(stagingDir)
         # input('')
-        doPush(pushType, item, pushingStagingFile=stagingFile is not None)
+        doPush(pushType, item, pushingStagingFile=stagingFile is not None, pushingCopiedImage=pushingCopiedImage)
         return 0
 
     except Exception as e:

@@ -1,261 +1,211 @@
 import sys
-import os
 import argparse
-from scripts.PushBullet import PushBullet
-import keyring
+from os import path, getcwd
 
-script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
-if script_loc_dir not in sys.path:  
+import pyperclip
+
+script_loc_dir = path.split(path.realpath(__file__))[0]
+if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 
-def pull(pb:PushBullet, copyPush, openInBrowser, fname=None):
-    push = pb.pull(1)[0]
+from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify
+from pc_pushbullet import getClipboardContent, ClipboardContentType
+from pc_pullbullet import openInBrowser, openTextWithOS, isCopyableImage, makeFileContainerFromPush, FileContainer, \
+    copyImageToClipboard
+from scripts.PushBullet import PushType
 
-    # default:
-    # note and links : echo to console
-    # file : saves to directory of fname, otherwise opens file dialog
+setHeadless(False)
 
-    # copyPush
-    # copy notes and links
-    # open file dialog
+def err(message: str, code:int =-1):
+    notify("Error", message)
+    sys.exit(code)
 
-    # openInBrowser
-    # echo note
-    # copy link
-    # open file in browser
+def push(file:str = None, link:str = None, note:str = None, title:str = None, getFromClipboard:bool=False):
+    pushingCopiedImage = True
 
-    if copyPush:
-        import pyperclip
-
-    if openInBrowser:
-        import subprocess
-        def brave(link):
-            child = subprocess.Popen([r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe", link])
-    
-
-    if push['type'] == 'note':
-        if copyPush:
-            pyperclip.copy(push['body'])
-            print('Note copied to clipboard')
-            return
-        
-        # default
-        print(push['body'])
-    
-    elif push['type'] == 'link':
-        if copyPush:
-            pyperclip.copy(push['url'])
-            print('URL copied to clipboard')
-            return
-        
-        if openInBrowser:
-            brave(push['url'])
-            return
-        
-        # default
-        print(push['url'])
-
-    elif push['type'] == 'file':
-        if openInBrowser:
-            # open the url in the browser
-            brave(push['url'])
-
-        # default
-        # save to file
-        from scripts.FileExplorerWindow import FileExplorerWindow
-        fex = FileExplorerWindow()
-        
-        path=os.path.split(push['name'])
-        if fname is not None:
-            fname = os.path.abspath(fname)
-            path = os.path.split(fname)
-        
-        filename = fex.getSavePath(windowTitle="Save Pushed File", path=path)
-        
-        if filename is not None:
-            with open(filename, "wb") as file:
-                file.write(push['content'])
-            print(f'File saved to {filename}')
+    if getFromClipboard:
+        item, contentType, pushingCopiedImage = getClipboardContent()
+        if contentType == ClipboardContentType.TEXT:
+            note = item
+        elif contentType == ClipboardContentType.FILE_PATH:
+            file = item
         else:
-            print('File not saved')
+            raise Exception("Unknown content type!")
 
-def latestFileInTemp():
-    import glob
-    # get the list of files in the log directory
-    dd = "C:\\Users\\omnic\\local\\temp"
-    list_of_files = glob.glob(f'{dd}\\*')
-    # get the c time of each file and use that as the key to order the list
-    # and identify the maximum
-    latest_file = max(list_of_files, key=os.path.getmtime)
-    return os.path.join(dd, latest_file)
+    pb = getPushBullet()
 
-def push(pb:PushBullet, text:str=None, link:str=None, filepath:str=None, title:str=None, message:str=None, fname:str=None, latestTemp:bool=False, clipBoard:bool=False ):
-    # text, link and file are contents
-    # title and message are optional
-    # fname for push to directory
+    if file is not None:
+        if not path.exists(file):
+            err(f"Selected file '{file}' does not exist")
 
-    if latestTemp:
-        filepath = latestFileInTemp()
+        pb.pushFile(file)
 
-    if clipBoard:
-        import win32clipboard as cb
-        cb.OpenClipboard()
-        hasFile = cb.IsClipboardFormatAvailable(cb.CF_HDROP)
-        if hasFile:
-            content = cb.GetClipboardData(cb.CF_HDROP)
+        if pushingCopiedImage:
+            notify(
+                'Copied Image pushed successfully'
+            )
         else:
-            content = (cb.GetClipboardData(), ) 
-        cb.CloseClipboard()
+            notify(
+                'File {} pushed succcessfully'.format(path.split(file)[1]),
+                f'Filepath: {file}'
+            )
 
-        # call on each of the items
-        for c in content:
-            push(pb, filepath=c, title=title, message=message, fname=fname)
+    elif link is not None:
+        pb.pushLink(link, title=title, message=note)
+        notify(
+            'Link pushed successfully',
+            link
+        )
+
+    elif note is not None:
+        pb.pushText(note, title=title)
+        notify(
+            'Note pushed successfully',
+            note
+        )
+
+    else:
+        err("No content was detected to push")
 
 
-    if text is not None and text != "":
-        
-        pb.pushText(text, title=title)
-        print("Note Pushed:")
 
-        if len(text) > 100:
-            t = text[:97]
-            t += '...'
-            print(t)
-        else:
-            print(text)
-    
-    elif link is not None and link != "":
-        pb.pushLink(link, title=title, message=message)
-        print("Link Pushed:")
-        print(link)
+def handleLink(link, openLink=False):
+    if openLink:
+        notify('Opening link in browser')
+        openInBrowser(link)
+    else:
+        pyperclip.copy(link)
+        notify('Link copied to clipboard', link)
 
-    elif filepath is not None and filepath != "":
-        filepath = os.path.abspath(filepath)
-        if not os.path.exists(filepath):
-            print(f"Could not find {filepath}")
-            return
 
-        newName = None
-        if fname is not None:
-            newName = os.path.split(fname)[1]
+def handleNote(note, openNote):
+    if openNote:
+        openTextWithOS(note)
+        return
 
-        pb.pushFile(filepath, newName)
-        print("File Pushed{}:".format("(as {})".format(newName) if newName is not None else ""))
-        print(filepath)
+    # Default behaviour: Copy to clipboard
+    pyperclip.copy(note)
+    notify(
+        'Note has been copied to your clipboard',
+        str(note)
+    )
 
-def printKeyInfo():
-    print('Refer to project README: {}'.format(os.path.abspath(os.path.join(os.path.split(__file__)[0], 'README.md'))))
+def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=False):
+    if copyFile:
+        if not isCopyableImage(fc.ext):
+            err("Non-image files cannot be copied to clipboard")
+        copyImageToClipboard(fc.ext, fc.bytes)
+        notify(f'Image {fc.name} has been copied to your clipboard')
+
+    elif openFile:
+        openInBrowser(fc.url)
+
+    else:
+        if saveTo is None:
+            saveTo = path.abspath(path.join(getcwd(), fc.name))
+
+        with open(saveTo, 'wb') as file:
+            file.write(fc.bytes)
+
+        msg = f'Destination: {saveTo}'
+
+        saveExt = path.splitext(saveTo)[1].replace('.', '')
+
+
+        if saveExt != fc.ext:
+            msg += f'\nWarning: Save extension ({saveExt}) does not match pushed file extension ({fc.ext})'
+
+        notify(f'File "{fc.name}" saved', msg)
+
+
+def pull(saveTo: str=None, copyItem: bool = False, openItem: bool = False):
+    push = getPushBullet().pull(1)[0]
+    match push.type:
+        case PushType.TEXT:
+            if isLink(push.body):
+                handleLink(push.body, openItem)
+            else:
+                handleNote(push.body, openItem)
+
+        case PushType.LINK:
+            handleLink(push.url, openItem)
+
+        case PushType.FILE:
+            handleFile(makeFileContainerFromPush(push), saveTo=saveTo, openFile=openItem, copyFile=copyItem)
+
+        case _:
+            raise Exception('Unidentified type {}'.format(push['type']))
+
+
 
 def main():
-    
     parser = argparse.ArgumentParser()
 
-
     parser.add_argument(
-        "-f",
-        required=False,
-        type = str,
-        metavar='<file path>',
-        help = "Push the file at given path"
+        '--push',
+        '--push',
+        action='store_true',
     )
 
     parser.add_argument(
-        "-n",
-        required=False,
-        type = str,
-        metavar='<string>',
-        help = "Pushes the given text"
+        '--pull',
+        '--pull',
+        action='store_true',
     )
 
     parser.add_argument(
-        "-l",
+        "-file",
         required=False,
-        type = str,
-        metavar='<URL>',
-        help = "Pushes the given text as a link"
+        type=str,
+        metavar='<file path>'
+    )
+
+    parser.add_argument(
+        "-link",
+        required=False,
+        type=str,
+        metavar='<file path>'
+    )
+
+    parser.add_argument(
+        "-note",
+        required=False,
+        type=str,
+        metavar='<file path>'
     )
 
     parser.add_argument(
         "-title",
         required=False,
-        type = str,
-        metavar='<title>',
-        help = "Title appended to the push"
+        type=str,
+        metavar='<file path>'
     )
 
     parser.add_argument(
-        "-msg",
-        required=False,
-        type = str,
-        metavar='<Message>',
-        help = "Message appended to the push"
-    )
-
-    parser.add_argument(
-        "-fname",
-        required=False,
-        type = str,
-        metavar='<filename/filepath>',
-        help = "File name that overrides the file path given"
-    )
-
-    parser.add_argument(
-        '--clip',
-        '--clip',
+        '--copy',
+        '--copy',
         action='store_true',
-        help='Get content from clipboard and push as text'
     )
 
     parser.add_argument(
-        '--temp',
-        '--temp',
+        '--open',
+        '--open',
         action='store_true',
-        help='Push latest file in temp'
     )
 
     parser.add_argument(
-        '--keys',
-        '--keys',
+        '--clipboard',
+        '--clipboard',
         action='store_true',
-        help='Show the hotkeys we have configured'
-    )
-
-
-    parser.add_argument(
-        '--cpy',
-        '--cpy',
-        action='store_true',
-        help='Pull content and copies notes and links to clipboard'
-    )
-
-    parser.add_argument(
-        '--b',
-        '--b',
-        action='store_true',
-        help='Pulls content and opens it in browser if applicabke, otherwise it will be printed to the screen'
     )
 
     options = parser.parse_args()
 
-    if options.keys:
-        printKeyInfo()
-        return
-
-    # default: print, note and links to screen, ask to save file
-    accessToken = keyring.get_password('api.pushbullet.com', 'omnictionarian.xp@gmail.com')
-    pb = PushBullet(accessToken)
-    
-    if (options.temp or options.clip) or any(arg is not None for arg in (options.f, options.n, options.l)):
-        push(pb, options.n, options.l, options.f, title=options.title, message=options.msg, 
-                fname=options.fname, latestTemp=options.temp, clipBoard=options.clip)
-        return
-
-    pull(pb, options.cpy, options.b)
-    
+    if options.push:
+        push(file=options.file, link=options.link, note=options.note, title=options.title, getFromClipboard=options.clipboard)
+    elif options.pull:
+        pull(saveTo=options.file, copyItem=options.copy, openItem=options.open)
 
 
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
