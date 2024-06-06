@@ -8,7 +8,7 @@ script_loc_dir = path.split(path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 
-from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify
+from scripts.shared import getPushBullet, isLink, setHeadless, notify
 from pc_pushbullet import getClipboardContent, ClipboardContentType
 from pc_pullbullet import openInBrowser, openTextWithOS, isCopyableImage, makeFileContainerFromPush, FileContainer, \
     copyImageToClipboard
@@ -20,10 +20,11 @@ def err(message: str, code:int =-1):
     notify("Error", message)
     sys.exit(code)
 
-def push(file:str = None, link:str = None, note:str = None, title:str = None, getFromClipboard:bool=False):
-    pushingCopiedImage = True
+def push(file:str = None, link:str = None, note:str = None, title:str = None, clipboard: bool = False):
+    pushingCopiedImage = False
 
-    if getFromClipboard:
+    if clipboard or (file is None and link is None and note is None):
+        print("Pushing From Clibboard...")
         item, contentType, pushingCopiedImage = getClipboardContent()
         if contentType == ClipboardContentType.TEXT:
             note = item
@@ -35,6 +36,7 @@ def push(file:str = None, link:str = None, note:str = None, title:str = None, ge
     pb = getPushBullet()
 
     if file is not None:
+        file = path.abspath(file)
         if not path.exists(file):
             err(f"Selected file '{file}' does not exist")
 
@@ -46,7 +48,7 @@ def push(file:str = None, link:str = None, note:str = None, title:str = None, ge
             )
         else:
             notify(
-                'File {} pushed succcessfully'.format(path.split(file)[1]),
+                'File {} pushed successfully'.format(path.split(file)[1]),
                 f'Filepath: {file}'
             )
 
@@ -98,11 +100,14 @@ def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=Fa
         notify(f'Image {fc.name} has been copied to your clipboard')
 
     elif openFile:
+        notify(f'Opening {fc.name}...')
         openInBrowser(fc.url)
 
     else:
         if saveTo is None:
-            saveTo = path.abspath(path.join(getcwd(), fc.name))
+            saveTo = path.join(getcwd(), fc.name)
+
+        saveTo = path.abspath(saveTo)
 
         with open(saveTo, 'wb') as file:
             file.write(fc.bytes)
@@ -119,22 +124,22 @@ def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=Fa
 
 
 def pull(saveTo: str=None, copyItem: bool = False, openItem: bool = False):
-    push = getPushBullet().pull(1)[0]
-    match push.type:
+    pushItem = getPushBullet().pull(1)[0]
+    match pushItem.type:
         case PushType.TEXT:
-            if isLink(push.body):
-                handleLink(push.body, openItem)
+            if isLink(pushItem.body):
+                handleLink(pushItem.body, openItem)
             else:
-                handleNote(push.body, openItem)
+                handleNote(pushItem.body, openItem)
 
         case PushType.LINK:
-            handleLink(push.url, openItem)
+            handleLink(pushItem.url, openItem)
 
         case PushType.FILE:
-            handleFile(makeFileContainerFromPush(push), saveTo=saveTo, openFile=openItem, copyFile=copyItem)
+            handleFile(makeFileContainerFromPush(pushItem), saveTo=saveTo, openFile=openItem, copyFile=copyItem)
 
         case _:
-            raise Exception('Unidentified type {}'.format(push['type']))
+            raise Exception('Unidentified type {}'.format(pushItem['type']))
 
 
 
@@ -142,67 +147,76 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--push',
-        '--push',
+        '-push',
+        '-push',
         action='store_true',
+        help='Push content to PushBullet. By default pushes content from clipboard unless flags specify otherwise'
     )
 
     parser.add_argument(
-        '--pull',
-        '--pull',
+        '-pull',
+        '-pull',
         action='store_true',
+        help='Pull content from PushBullet'
+    )
+
+    parser.add_argument(
+        '-clip',
+        '-clip',
+        action='store_true',
+        help='Used with -push, pushes content from clipboard'
     )
 
     parser.add_argument(
         "-file",
         required=False,
         type=str,
-        metavar='<file path>'
+        metavar='<file path>',
+        help='Specifies the source file to push to PushBullet, or the destination path to save the file pulled from PushBullet'
     )
 
     parser.add_argument(
         "-link",
         required=False,
         type=str,
-        metavar='<file path>'
+        metavar='<url>',
+        help='Specifies the URL to push to PushBullet as a link'
     )
 
     parser.add_argument(
         "-note",
         required=False,
         type=str,
-        metavar='<file path>'
+        metavar='<string>',
+        help='Specifies the note to push to PushBullet, can also be used along with -link to include a body for the URL'
     )
 
     parser.add_argument(
         "-title",
         required=False,
         type=str,
-        metavar='<file path>'
+        metavar='<string>',
+        help='Specifies the title of the note to push to PushBullet, can also specify title of link message when used with -link'
     )
 
     parser.add_argument(
-        '--copy',
-        '--copy',
+        '-copy',
+        '-copy',
         action='store_true',
+        help='Used with -pull, copies pushed links, notes and images to your clipboard. Other file types are not supported.'
     )
 
     parser.add_argument(
-        '--open',
-        '--open',
+        '-open',
+        '-open',
         action='store_true',
-    )
-
-    parser.add_argument(
-        '--clipboard',
-        '--clipboard',
-        action='store_true',
+        help="Used with -pull, opens pushed links and files in your computer's browser"
     )
 
     options = parser.parse_args()
 
     if options.push:
-        push(file=options.file, link=options.link, note=options.note, title=options.title, getFromClipboard=options.clipboard)
+        push(file=options.file, link=options.link, note=options.note, title=options.title, clipboard=options.clip)
     elif options.pull:
         pull(saveTo=options.file, copyItem=options.copy, openItem=options.open)
 
