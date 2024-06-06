@@ -1,5 +1,6 @@
 import sys
 import argparse
+from enum import Enum
 from os import path, getcwd
 
 import pyperclip
@@ -9,33 +10,91 @@ if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 
 from scripts.shared import getPushBullet, isLink, setHeadless, notify
-from pc_pushbullet import getClipboardContent, ClipboardContentType
+from pc_pushbullet import getClipboardContent, ClipboardContentType, is_file_uri, file_uri_to_file_path
 from pc_pullbullet import openInBrowser, openTextWithOS, isCopyableImage, makeFileContainerFromPush, FileContainer, \
     copyImageToClipboard
 from scripts.PushBullet import PushType
 
 setHeadless(False)
 
+class ClipAsType(Enum):
+    AUTO = "auto"
+    NOTE = "note"
+    FILE = "file"
+    LINK = "link"
+
+def getTypeForValString(enumType, valStr: str):
+    valStr = valStr.lower()
+    listOfTypes = list(enumType.__members__.values())
+    for t in listOfTypes:
+        if valStr == t.value:
+            return t
+    raise Exception(f'Unknown type "{valStr}" for type list: {listOfTypes}')
+
+
 def err(message: str, code:int =-1):
     notify("Error", message)
     sys.exit(code)
 
-def push(file:str = None, link:str = None, note:str = None, title:str = None, clipboard: bool = False):
+def interpretClipboard(item, contentType:ClipboardContentType, ct:ClipAsType):
+    if contentType == ClipboardContentType.FILE_PATH:
+        if ct == ClipAsType.LINK:
+            err(f'Cannot convert file path "{item}" to link')
+        elif ct == ClipAsType.NOTE:
+            return item, ClipAsType.NOTE
+        else:
+            # Clip as file, or clip as auto
+            return item, ClipAsType.FILE
+
+    elif contentType == ClipboardContentType.TEXT:
+        if ct == ClipAsType.NOTE:
+            return item, ClipAsType.NOTE
+
+        elif ct == ClipAsType.LINK:
+            return item, ClipAsType.LINK
+
+        elif ct == ClipAsType.FILE:
+            fp = item
+            if is_file_uri(fp):
+                fp = file_uri_to_file_path(fp)
+            return fp, ClipAsType.FILE
+
+        else: # auto
+            if is_file_uri(item):
+                item = file_uri_to_file_path(item)
+                return item, ClipAsType.FILE
+
+            return item, ClipAsType.LINK if isLink(item) else ClipAsType.NOTE
+
+def push(file:str = None, link:str = None, note:str = None, title:str = None, clipAs:ClipAsType = None):
     pushingCopiedImage = False
 
-    if clipboard or (file is None and link is None and note is None):
-        print("Pushing From Clibboard...")
-        item, contentType, pushingCopiedImage = getClipboardContent()
-        if contentType == ClipboardContentType.TEXT:
-            note = item
-        elif contentType == ClipboardContentType.FILE_PATH:
-            file = item
+    if clipAs is not None or (file is None and link is None and note is None):
+        if clipAs == ClipAsType.AUTO:
+            istr = "Automatic interpretation"
         else:
-            raise Exception("Unknown content type!")
+            istr = f"Interpreting as {clipAs.value}"
+
+        print(f"Pushing From Clipboard, {istr}")
+        item, contentType, pushingCopiedImage = getClipboardContent()
+        item, clipAs = interpretClipboard(item, contentType, clipAs)
+
+        match clipAs:
+            case ClipAsType.NOTE:
+                note = item
+            case ClipAsType.LINK:
+                link = item
+            case ClipAsType.FILE:
+                file = item
+            case _:
+                raise Exception(f"Invalid ClipAsType: {clipAs}")
 
     pb = getPushBullet()
 
     if file is not None:
+        if is_file_uri(file):
+            file = file_uri_to_file_path(file)
+
         file = path.abspath(file)
         if not path.exists(file):
             err(f"Selected file '{file}' does not exist")
@@ -150,7 +209,7 @@ def main():
         '-push',
         '-push',
         action='store_true',
-        help='Push content to PushBullet. By default pushes content from clipboard unless flags specify otherwise'
+        help='Push content to PushBullet. By default pushes content from clipboard with automatic interpretation unless flags specify otherwise'
     )
 
     parser.add_argument(
@@ -161,10 +220,18 @@ def main():
     )
 
     parser.add_argument(
+        "-clipas",
+        required=False,
+        type=str,
+        metavar='<string>',
+        help='Used with -push, Specifies how to interpret clipboard content for pushing. Can be "file", "link", "note" or "auto"'
+    )
+
+    parser.add_argument(
         '-clip',
         '-clip',
         action='store_true',
-        help='Used with -push, pushes content from clipboard'
+        help='Used with -push, pushes content from clipboard with auto interpretation (equivalent to -clipas "auto")'
     )
 
     parser.add_argument(
@@ -215,8 +282,21 @@ def main():
 
     options = parser.parse_args()
 
+    clipAs = None
+    if options.clip is not None:
+        clipAs = ClipAsType.AUTO
+
+    if options.clipas is not None:
+        typeVals = [t.value for t in list(ClipAsType.__members__.values())]
+        if options.clipas not in typeVals:
+            err(f"Invalid argument for -clipas, must be one of the following: {', '.join(typeVals)}")
+
+        clipAs = getTypeForValString(ClipAsType, options.clipas)
+
+
+
     if options.push:
-        push(file=options.file, link=options.link, note=options.note, title=options.title, clipboard=options.clip)
+        push(file=options.file, link=options.link, note=options.note, title=options.title, clipAs=clipAs)
     elif options.pull:
         pull(saveTo=options.file, copyItem=options.copy, openItem=options.open)
 
