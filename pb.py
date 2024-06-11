@@ -68,7 +68,6 @@ def interpretClipboard(item, contentType:ClipboardContentType, ct:ClipAsType):
 
 def push(file:str = None, link:str = None, note:str = None, title:str = None, clipAs:ClipAsType = None):
     pushingCopiedImage = False
-
     if clipAs is not None or (file is None and link is None and note is None):
         if clipAs == ClipAsType.AUTO:
             istr = "Automatic interpretation"
@@ -201,6 +200,27 @@ def pull(saveTo: str=None, copyItem: bool = False, openItem: bool = False):
             raise Exception('Unidentified type {}'.format(pushItem['type']))
 
 
+def peekLink(link):
+    notify('Link last pushed', body=link)
+
+def peek():
+    pushItem = getPushBullet().pull(1)[0]
+    match pushItem.type:
+        case PushType.TEXT:
+            if isLink(pushItem.body):
+                peekLink(pushItem.body)
+            else:
+                notify('Note last pushed', body=pushItem.body)
+
+        case PushType.LINK:
+            peekLink(pushItem.url)
+
+        case PushType.FILE:
+            fc = makeFileContainerFromPush(pushItem)
+            notify('File last pushed', f'Name:\n{fc.name}\nURL:\n{fc.url}')
+
+        case _:
+            raise Exception('Unidentified type {}'.format(pushItem['type']))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -217,6 +237,13 @@ def main():
         '-pull',
         action='store_true',
         help='Pull content from PushBullet'
+    )
+
+    parser.add_argument(
+        '-peek',
+        '-peek',
+        action='store_true',
+        help='Peek at the last pushed item to PushBullet'
     )
 
     parser.add_argument(
@@ -274,8 +301,8 @@ def main():
     )
 
     parser.add_argument(
-        '-open',
-        '-open',
+        '-view',
+        '-view',
         action='store_true',
         help="Used with -pull, opens pushed links and files in your computer's browser"
     )
@@ -283,7 +310,7 @@ def main():
     options = parser.parse_args()
 
     clipAs = None
-    if options.clip is not None:
+    if options.clip:
         clipAs = ClipAsType.AUTO
 
     if options.clipas is not None:
@@ -294,11 +321,14 @@ def main():
         clipAs = getTypeForValString(ClipAsType, options.clipas)
 
 
-
-    if options.push:
+    if options.peek:
+        peek()
+    elif options.push:
         push(file=options.file, link=options.link, note=options.note, title=options.title, clipAs=clipAs)
     elif options.pull:
-        pull(saveTo=options.file, copyItem=options.copy, openItem=options.open)
+        pull(saveTo=options.file, copyItem=options.copy, openItem=options.view)
+    else:
+        err("No action provided")
 
 
 if __name__ == "__main__":

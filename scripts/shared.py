@@ -107,13 +107,31 @@ def notify(title, body="", attachmentLabel=None, attachmentPath=None):
     if HEADLESS:
         notif(title, body=body, filePath=attachmentPath, label=attachmentLabel)
     else:
+        from shutil import get_terminal_size
+        dispChars = get_terminal_size().columns - 10
         # just print the console
         print(title)
         if body != "":
             if len(body) > 200:
-                print(f'   {body[:197]}...')
-            else:
-                print(f'    {body}')
+                body = f'{body[:197]}...'
+
+            lines = body.split('\n')
+            for line in lines:
+                if len(line) < dispChars:
+                    print(f'\t{line}')
+                    continue
+
+                # k = 0
+                # l = len(line)
+                # while k < l:
+                #     # First get the stopping index
+                #     st = k + dispChars
+                #     # Check the character, if it is not a space, then go back till we reach a space
+                #     if
+
+                for i in range(0, len(line), dispChars):
+                    print(f'\t{line[i:i+dispChars]}')
+
         if attachmentLabel is not None:
             print('Label: ', attachmentLabel)
         if attachmentPath is not None:
