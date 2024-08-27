@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-added_files = [ ('..\\assets\\pushbullet-icon.png', '.'), ('pushbullet-icon.ico', '.') ]
+added_files = [ ('..\\assets\\pushbullet-icon.png', '.'), ('..\\..\\pushbullet-icon.ico', '.') ]
 
 a = Analysis(
     ['..\\..\\pc_pushbullet.py'],
@@ -33,7 +33,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     contents_directory='.',
-    icon='pushbullet-icon.ico'
+    icon='..\\..\\pushbullet-icon.ico'
 )
 coll = COLLECT(
     exe,

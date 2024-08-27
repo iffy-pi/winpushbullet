@@ -1,8 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-added_files = [('pb-icon.ico', '.')]
+added_files = [('..\\..\\pb-icon.ico', '.')]
 
 a = Analysis(
-    ['..\\..\\pc_pullbullet.py'],
+    ['..\\..\\pb.py'],
     pathex=[],
     binaries=[],
     datas=added_files,
@@ -33,7 +33,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     contents_directory='.',
-    icon='pb-icon.ico'
+    icon='..\\..\\pb-icon.ico'
 )
 coll = COLLECT(
     exe,
