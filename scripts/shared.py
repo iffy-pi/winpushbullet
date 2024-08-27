@@ -2,13 +2,25 @@ import os
 import keyring
 from winotify import Notification
 from scripts.PushBullet import PushBullet
-from config.userconfig import TEMP_DIRECTORY
 from config.save_access_token import CRED_SERVICE_NAME, CRED_USER_NAME
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 
-ERROR_LOG_FILE = f"{TEMP_DIRECTORY}\\error_logs.txt"
-NOTIF_ICON = os.path.join(script_loc_dir, "pushbullet-icon.png")
+TEMP_DIRECTORY = os.path.join(script_loc_dir, 'temp')
+ERROR_LOG_FILE = os.path.join(script_loc_dir, "error_logs.txt")
+NOTIF_ICON = os.path.join(os.getcwd(), "pushbullet-icon.png")
+NOTIF_APP_ID = 'PushBullet'
+
+def config_working_files(home_dir):
+    # This makes sure that when the application is built, temp and error logs will map to its program files folder
+    global TEMP_DIRECTORY
+    global ERROR_LOG_FILE
+    TEMP_DIRECTORY = os.path.join(home_dir, 'temp')
+    ERROR_LOG_FILE = os.path.join(home_dir, "error_logs.txt")
+
+    if not os.path.exists(TEMP_DIRECTORY):
+        os.makedirs(TEMP_DIRECTORY, exist_ok=True)
+
 
 def getPushBullet():
     accessToken = keyring.get_password(CRED_SERVICE_NAME, CRED_USER_NAME)
@@ -87,11 +99,17 @@ def getArgumentForFlag(args:list[str], flag:str) -> str|None:
 def scriptErrNotif(errorObj, logFilePath):
     notif("An error occured", body=str(errorObj), label="See log file", filePath=logFilePath)
 
+def config_notif(app_id, icon):
+    global NOTIF_ICON
+    global NOTIF_APP_ID
+    NOTIF_ICON = icon
+    NOTIF_APP_ID = app_id
+
 def notif(title, body="", label="See Here", url=None, filePath=None):
     if len(body) > 135:
         body = f"{body[:135]}..."
 
-    toast = Notification('PushBullet', title, msg=body, icon=NOTIF_ICON)
+    toast = Notification(NOTIF_APP_ID, title, msg=body, icon=NOTIF_ICON)
 
     if url is not None:
         toast.add_actions(label=label, launch=url)

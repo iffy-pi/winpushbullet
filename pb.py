@@ -307,7 +307,17 @@ def main():
         help="Used with -pull, opens pushed links and files in your computer's browser"
     )
 
+    parser.add_argument(
+        '--headless',
+        '--headless',
+        action='store_true',
+        help="No output to console, notifications are sent through windows"
+    )
+
     options = parser.parse_args()
+
+    if options.headless:
+        setHeadless(True)
 
     clipAs = None
     if options.clip:

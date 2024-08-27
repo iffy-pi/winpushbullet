@@ -1,15 +1,18 @@
 import sys
-import os
+from os import startfile
+from os.path import join, split, realpath, splitext, exists
 from enum import Enum
 
 import pyperclip
 
-script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
+script_loc_dir = split(realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
     sys.path.append(script_loc_dir)
-from scripts.shared import checkFlags, getArgumentForFlag, setHeadless, notify, getPushBullet, isLink
-from scripts.PushBullet import PushBullet, PushObject, PushType
-from config.userconfig import TEMP_DIRECTORY
+from scripts.shared import checkFlags, getArgumentForFlag, setHeadless, notify, getPushBullet, isLink, TEMP_DIRECTORY, config_notif, config_working_files
+from scripts.PushBullet import PushObject, PushType
+
+config_notif('PC PullBullet', join(script_loc_dir, 'pullbullet-icon.ico'))
+config_working_files(script_loc_dir)
 
 
 IMAGE_FILE_EXTENSIONS = (
@@ -27,7 +30,7 @@ class ScriptBehaviour(Enum):
 class FileContainer:
     def __init__(self, name:str, url: str, fileBytes:bytes, pushType:PushType):
         self.name =  name
-        self.ext = os.path.splitext(name)[1].replace('.', '')
+        self.ext = splitext(name)[1].replace('.', '')
         self.url = url
         self.bytes = fileBytes
         self.pushType = pushType
@@ -41,7 +44,7 @@ def openTextWithOS(text:str):
     tempFile = f"{TEMP_DIRECTORY}\\temp.txt"
     with open(tempFile, "w") as file:
         file.write(text)
-    os.startfile(tempFile, "open")
+    startfile(tempFile, "open")
 
 def copyImageToClipboard(fileExt, fileContent: bytes):
     # save the image to a temp file
@@ -77,8 +80,8 @@ def getCommonName(pt:PushType):
 def saveFile(fc: FileContainer):
     # Save file method for -saveToDir
     # If there is a file that exists at that location, default to file explorer dialog
-    if SAVE_DIRECTORY_PATH is not None and not SAVE_TO_DIR_USING_DLG and not os.path.exists(os.path.join(SAVE_DIRECTORY_PATH, fc.name)):
-        with open(os.path.join(SAVE_DIRECTORY_PATH, fc.name), 'wb') as file:
+    if SAVE_DIRECTORY_PATH is not None and not SAVE_TO_DIR_USING_DLG and not exists(join(SAVE_DIRECTORY_PATH, fc.name)):
+        with open(join(SAVE_DIRECTORY_PATH, fc.name), 'wb') as file:
             file.write(fc.bytes)
 
         title = 'File {} saved to directory'.format(fc.name)
@@ -235,7 +238,7 @@ def main():
 
         if SAVE_DIRECTORY_PATH is not None:
             SAVE_DIRECTORY_PATH = SAVE_DIRECTORY_PATH.replace('"', '')
-            if not os.path.exists(SAVE_DIRECTORY_PATH):
+            if not exists(SAVE_DIRECTORY_PATH):
                 raise Exception('Save Directory does not exist!')
 
         push = getPushBullet().pull(1)[0]

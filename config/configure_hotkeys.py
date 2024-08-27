@@ -7,8 +7,8 @@ python_exec = os.path.join(os.path.split(sys.executable)[0], 'pythonw.exe')
 with open(os.path.join(project_root, 'config', 'hotkeys_template.ahk'), 'r') as file:
     content = file.read()
 
-content = content.replace("<PROJECT_ROOT>", project_root)
-content = content.replace("<PYTHON EXECUTABLE>", python_exec)
+content = content.replace("<pllExec>", 'C:\\PC_PushBullet_Integrations\\PC_PullBullet\\PC_PullBullet.exe')
+content = content.replace("<pshExec>", 'C:\\PC_PushBullet_Integrations\\PC_PushBullet\\PC_PushBullet.exe')
 
 
 hotKeyFile = os.path.join(project_root, 'config', 'hotkeys.ahk')

@@ -1,13 +1,12 @@
-import os
+from os.path import join, split, abspath
 import sys
 import winreg as reg
 
-PYTHONEXEC = r'C:\Python310\pythonw.exe'
 BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH = r"Directory\\Background\\shell"
 SELECTED_DIRECTORY_CONTEXT_MENU_PATH = r"Directory\\shell"
 SELECTED_FILE_CONTEXT_MENU_PATH = r"*\\shell"
 headlessFlag = '--headless'
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.split(__file__)[0], '..'))
+PROJECT_ROOT = abspath(join(split(__file__)[0], '..'))
 
 def addContextMenuRegistry(folderPath, optionName, commandStr, icon=None):
     folderKey = reg.CreateKeyEx(reg.HKEY_CLASSES_ROOT, folderPath)
@@ -21,68 +20,62 @@ def addContextMenuRegistry(folderPath, optionName, commandStr, icon=None):
 
 
 def addPushFileToContextMenu(scriptPath, icon):
-    folderPath = SELECTED_FILE_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push File"
+    folderPath = SELECTED_FILE_CONTEXT_MENU_PATH + r"\\" + "PC_PushBullet Push File"
     optionName = 'Push File'
-    commandStr = f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%1" "--file"'
+    commandStr = f'"{scriptPath}" "{headlessFlag}" "-arg" "%1" "--file"'
     addContextMenuRegistry(folderPath, optionName, commandStr, icon=icon)
 
 
 def addPushDirPathToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
-        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Current Directory Path",
+        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "PC_PushBullet Push Current Directory Path",
         'Push Path of Current Directory',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
+        f'"{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
         icon=icon
     )
     # also add one when the directory is selected
     addContextMenuRegistry(
-        SELECTED_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PushBullet Push Directory Path",
+        SELECTED_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "PC_PushBullet Push Directory Path",
         'Push Directory Path',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
+        f'"{scriptPath}" "{headlessFlag}" "-arg" "%V" "--text"',
         icon=icon
     )
 
 
 def addPullFileToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
-        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File",
+        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "PC_PullBullet Pull File",
         'Pull File To Here',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDir" "%V"',
+        f'"{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDir" "%V"',
         icon=icon
     )
 
 
 def addPullFileRenameToContextMenu(scriptPath, icon):
     addContextMenuRegistry(
-        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "Python PullBullet Pull File And Rename",
+        BACKGROUND_DIRECTORY_CONTEXT_MENU_PATH + r"\\" + "PC_PullBullet Pull File And Rename",
         'Pull File To Here and Rename...',
-        f'{PYTHONEXEC} "{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDirWithDlg" "%V"',
+        f'"{scriptPath}" "{headlessFlag}" "--handleAsFile" "-behaviour" "save" "-saveToDirWithDlg" "%V"',
         icon=icon
     )
 
-
-# Add pull to directory
-
 def main():
-    global PYTHONEXEC
-
-    PYTHONEXEC = os.path.join(os.path.split(sys.executable)[0], 'pythonw.exe')
-    pushBulletScript = os.path.join(PROJECT_ROOT, 'pc_pushbullet.py')
-    pullBulletScript = os.path.join(PROJECT_ROOT, 'pc_pullbullet.py')
-    pushBulletIcon =  os.path.join(PROJECT_ROOT, 'config', "pushbullet-icon.ico")
-    pullBulletIcon = os.path.join(PROJECT_ROOT, 'config', "pullbullet-icon.ico")
+    pshDir = 'C:\\PC_PushBullet_Integrations\\PC_PushBullet'
+    pllDir = 'C:\\PC_PushBullet_Integrations\\PC_PullBullet'
+    pshExec = join(pshDir, 'PC_PushBullet.exe')
+    pllExec = join(pllDir, 'PC_PullBullet.exe')
 
     print('Adding Push File To Context Menu')
-    addPushFileToContextMenu(pushBulletScript, pushBulletIcon)
+    addPushFileToContextMenu(pshExec, pshExec)
 
     print('Adding Push Directory Path To Context Menu')
-    addPushDirPathToContextMenu(pushBulletScript, pushBulletIcon)
+    addPushDirPathToContextMenu(pshExec, pshExec)
 
     print('Adding Pull File To Here To Context Menu')
-    addPullFileToContextMenu(pullBulletScript, pullBulletIcon)
+    addPullFileToContextMenu(pllExec, pllExec)
 
     print('Adding Pull File And Rename To Context Menu')
-    addPullFileRenameToContextMenu(pullBulletScript, pullBulletIcon)
+    addPullFileRenameToContextMenu(pllExec, pllExec)
 
     print('Process Complete')
     input('Press Enter to Exit')
