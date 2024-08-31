@@ -1,4 +1,5 @@
 import sys
+import keyring
 import argparse
 from enum import Enum
 from os import path, getcwd
@@ -9,7 +10,7 @@ script_loc_dir = path.split(path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 
-from scripts.shared import getPushBullet, isLink, setHeadless, notify
+from scripts.shared import getPushBullet, isLink, setHeadless, notify, getAcessToken, setAccessToken, CRED_SERVICE_NAME
 from pc_pushbullet import getClipboardContent, ClipboardContentType, is_file_uri, file_uri_to_file_path
 from pc_pullbullet import openInBrowser, openTextWithOS, isCopyableImage, makeFileContainerFromPush, FileContainer, \
     copyImageToClipboard
@@ -22,6 +23,26 @@ class ClipAsType(Enum):
     NOTE = "note"
     FILE = "file"
     LINK = "link"
+
+def print_token_howtos():
+    print(f'Configured Acess Token: "{getAcessToken()}"')
+    print(f'Access Token is saved as a Generic Windows Credential under {CRED_SERVICE_NAME}')
+    print('Access Token can either be edited in Windows Credential Manager or by running "pb -token <token>" or "pb --configure"')
+
+def ask_for_access_token():
+    print('Your access token is required to access your PushBullet account. You can acquire an access token through your account settings.')
+    accessToken = input('Paste PushBullet Access Token: ').strip()
+    setAccessToken(accessToken)
+    print_token_howtos()
+
+def print_token_information():
+    token = getAcessToken()
+    if token is None:
+        print('No access token has been configured')
+        print('Set an access token using "pb -set-token <token>" or "pb --configure"')
+        return
+
+    print_token_howtos()
 
 def getTypeForValString(enumType, valStr: str):
     valStr = valStr.lower()
@@ -314,10 +335,45 @@ def main():
         help="No output to console, notifications are sent through windows"
     )
 
+    parser.add_argument(
+        "-set-token",
+        required=False,
+        type=str,
+        metavar='<string>',
+        help='Sets the PushBullet access token used by the WinPushBullet services'
+    )
+
+    parser.add_argument(
+        '--configure',
+        '--configure',
+        action='store_true',
+        help="User input interface for configuring WinPushBullet services"
+    )
+
+    parser.add_argument(
+        '--get-token',
+        '--get-token',
+        action='store_true',
+        help="Prints access token in use"
+    )
+
     options = parser.parse_args()
+
+    if options.configure:
+        ask_for_access_token()
+        return 0
 
     if options.headless:
         setHeadless(True)
+
+    if options.get_token:
+        print_token_information()
+        return 0
+
+    if options.set_token is not None:
+        setAccessToken(options.set_token)
+        print_token_information()
+        return 0
 
     clipAs = None
     if options.clip:

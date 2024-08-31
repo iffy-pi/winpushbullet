@@ -2,14 +2,16 @@ import os
 import keyring
 from winotify import Notification
 from scripts.PushBullet import PushBullet
-from config.save_access_token import CRED_SERVICE_NAME, CRED_USER_NAME
+
+CRED_SERVICE_NAME = "WinPushBullet-Access-Token"
+CRED_USER_NAME = "WinPushBullet"
 
 script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
 
 TEMP_DIRECTORY = os.path.join(script_loc_dir, 'temp')
 ERROR_LOG_FILE = os.path.join(script_loc_dir, "error_logs.txt")
 NOTIF_ICON = os.path.join(os.getcwd(), "pushbullet-icon.png")
-NOTIF_APP_ID = 'PushBullet'
+NOTIF_APP_ID = 'WinPushBullet'
 
 def config_working_files(home_dir):
     # This makes sure that when the application is built, temp and error logs will map to its program files folder
@@ -22,12 +24,20 @@ def config_working_files(home_dir):
         os.makedirs(TEMP_DIRECTORY, exist_ok=True)
 
 
+def getAcessToken():
+    return keyring.get_password(CRED_SERVICE_NAME, CRED_USER_NAME)
+
+def setAccessToken(token):
+    keyring.set_password(
+        CRED_SERVICE_NAME,
+        CRED_USER_NAME,
+        token
+    )
+
 def getPushBullet():
-    accessToken = keyring.get_password(CRED_SERVICE_NAME, CRED_USER_NAME)
+    accessToken = getAcessToken()
     if accessToken is None:
-        text = f'''Could not find PushBullet access token
-Check Credential Manager > Generic Credentials for the user "{CRED_USER_NAME}" under the service {CRED_SERVICE_NAME}.
-Alternatively, reregister your access token using config.savePushBulletAccessToken'''
+        text = f'''Could not find WinPushBullet access token in Windows Credentials. Configure your access token using "pb --configure"'''
         raise Exception(text)
 
     return PushBullet(accessToken)

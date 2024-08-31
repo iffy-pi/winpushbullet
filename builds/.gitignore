@@ -1,3 +1,5 @@
 # Ignore any build directories
 dist
 build
+fulldist
+installers

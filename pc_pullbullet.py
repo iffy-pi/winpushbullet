@@ -11,7 +11,7 @@ if script_loc_dir not in sys.path:
 from scripts.shared import checkFlags, getArgumentForFlag, setHeadless, notify, getPushBullet, isLink, TEMP_DIRECTORY, config_notif, config_working_files
 from scripts.PushBullet import PushObject, PushType
 
-config_notif('PC PullBullet', join(script_loc_dir, 'pullbullet-icon.ico'))
+config_notif('WinPushBullet', join(script_loc_dir, 'pullbullet-icon.ico'))
 config_working_files(script_loc_dir)
 
 

@@ -4,7 +4,11 @@ This is a set of scripts I designed that uses PushBullet to achieve AirDrop-like
 This involves sharing of text, links and files quickly between the Apple device and the Windows PC.
 
 TODO:
-- Make NSIS installer to retire configure scripts
+- Update NSIS script so that pb configure actually works
+- Update readme with information
+- Push changes to alternate branch and build
+- Publish version!
+
 
 ## Functions and Features
 If you configure the system (see Configure section below), you will have access to the following functions.

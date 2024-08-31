@@ -13,7 +13,7 @@ if script_loc_dir not in sys.path:
 from scripts.PushBullet import PushType
 from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify, config_notif, config_working_files, TEMP_DIRECTORY
 
-config_notif('PC PushBullet', path.join(script_loc_dir, 'pushbullet-icon.ico'))
+config_notif('WinPushBullet', path.join(script_loc_dir, 'pushbullet-icon.ico'))
 config_working_files(script_loc_dir)
 
 class ClipboardContentType(Enum):
