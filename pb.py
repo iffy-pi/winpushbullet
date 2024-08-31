@@ -30,12 +30,22 @@ def print_token_howtos():
     print('Access Token can either be edited in Windows Credential Manager or by running "pb -token <token>" or "pb --configure"')
 
 def ask_for_access_token():
-    print('Your access token is required to access your PushBullet account. You can acquire an access token through your account settings.')
+    curToken = getAcessToken()
+    if curToken is not None:
+        print(f'You already have an access token configured: "{curToken}"')
+        resp = input('Would you like to overwrite it? [y/n]: ').strip().lower()
+        if resp != 'y':
+            return
+
+    print('Your access token is required to access your PushBullet account.You can acquire an access token through your account settings.')
     accessToken = input('Paste PushBullet Access Token: ').strip()
     setAccessToken(accessToken)
     print_token_howtos()
 
 def print_token_information():
+    if sys.stdout is None:
+        return
+
     token = getAcessToken()
     if token is None:
         print('No access token has been configured')
@@ -357,6 +367,13 @@ def main():
         help="Prints access token in use"
     )
 
+    parser.add_argument(
+        '--get-token-only',
+        '--get-token-only',
+        action='store_true',
+        help="Prints access token in use"
+    )
+
     options = parser.parse_args()
 
     if options.configure:
@@ -368,6 +385,10 @@ def main():
 
     if options.get_token:
         print_token_information()
+        return 0
+
+    if options.get_token_only:
+        print(getAcessToken())
         return 0
 
     if options.set_token is not None:
