@@ -47,7 +47,7 @@ You also have access to the following actions when you right-click in File Explo
 ### Requirements
 - A PushBullet Account and your access token
 - To generate your access token, go to https://www.pushbullet.com/#settings/account > Access Tokens > Create Access Token
-- AutoHotKey v2: https://www.autohotkey.com/v2/
+- AutoHotKey: https://www.autohotkey.com
 
 ### How-To
 Download and run the latest released installer.

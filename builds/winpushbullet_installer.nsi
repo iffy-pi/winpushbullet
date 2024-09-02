@@ -23,7 +23,7 @@
 
 !define VER_MAJOR 2
 !define VER_MINOR 0
-!define VER_REVISION 0
+!define VER_REVISION 1
 
 !define INPUT_DIR ".\fulldist"           ; directory to pack
 !define OUTPUT_DIR ".\installers"										   ; directory in which to write installer exe
@@ -124,6 +124,7 @@ var TxtHotkeyScriptAddr
 var BtnBrowseHotkeyAddr
 var ChkBxAddToStart
 var ChkBxState
+var ChkBxRunHotKeyNow
 
 Function ConfigPage
 	; ConfigPage page creation function - populates the page with the dialogs and controls we want
@@ -158,7 +159,7 @@ Function ConfigPage
 	Pop $TxtAccessToken
 	${NSD_OnChange} $TxtAccessToken ConfigPage_OnTxtAccessTokenChange
 
-	${NSD_CreateLabel} 0 45u 100% 12u "Save address of generated HotKey script (requires AutoHotKey v2)"
+	${NSD_CreateLabel} 0 45u 100% 12u "Save address of generated HotKey script"
 	Pop $LblHotkeyGen
 
 	${NSD_CreateText} 0 57u 78% 13u "$INSTDIR\WinPushBullet_Hotkeys.ahk"
@@ -169,7 +170,10 @@ Function ConfigPage
 	Pop $BtnBrowseHotkeyAddr
 	${NSD_OnClick} $BtnBrowseHotkeyAddr ConfigPage_OnBtnBrowse
 
-	${NSD_CreateCheckBox} 0 72u 100% 13u "Add hotkey script to run at start up"
+	${NSD_CreateCheckBox} 0 72u 100% 13u "Load hotkey script after install is complete (requires AutoHotKey)"
+	Pop $ChkBxRunHotKeyNow
+
+	${NSD_CreateCheckBox} 0 85u 100% 13u "Automatically load hotkey script at start up"
 	Pop $ChkBxAddToStart
 
 	nsDialogs::Show
@@ -187,6 +191,21 @@ Function ConfigPageLeave
 	${NSD_GetText} $TxtHotkeyScriptAddr $0
 	${If} $0 != "$INSTDIR\WinPushBullet_Hotkeys.ahk"
 		Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -Command "(Get-Content \"$INSTDIR\hotkeys_template.ahk\").replace(\"<INSTDIR>\", \"$INSTDIR\") | Set-Content \"$0\""'
+	${EndIf}
+
+	; Load hotkey script if requested
+	${NSD_GetState} $ChkBxRunHotKeyNow $ChkBxState
+	${If} $ChkBxState == ${BST_CHECKED}
+		${NSD_GetText} $TxtHotkeyScriptAddr $0
+		; Check to make sure autohot key exists
+		IfFileExists 'C:\Program Files\AutoHotkey\AutoHotkey.exe' load_script
+		MessageBox MB_OK "Your AutoHotKey installation could not be found.$\nYou will need to load the hotkey script ($0) manually."
+		GoTo end_this_if
+
+		load_script:
+		Exec '"C:\Program Files\AutoHotkey\AutoHotkey.exe" "$0"'
+
+		end_this_if:
 	${EndIf}
 
 	; If they wanted it added at start up
