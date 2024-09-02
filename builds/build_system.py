@@ -1,4 +1,5 @@
-import os
+from os import chdir
+from os.path import join, exists, split
 import shutil
 import sys
 import time
@@ -6,7 +7,7 @@ import subprocess
 from enum import Enum
 from shutil import rmtree, copytree
 
-BUILDS_DIRECTORY = os.path.split(__file__)[0]
+BUILDS_DIRECTORY = split(__file__)[0]
 PYINSTALLER = 'C:\\Python\\3.12.5\\Scripts\\pyinstaller.exe'
 
 class Application(Enum):
@@ -44,10 +45,10 @@ app_build_info = {
 
 def build_application(app: Application):
     info = app_build_info[app]
-    os.chdir(os.path.join(BUILDS_DIRECTORY, info['folder']))
+    chdir(join(BUILDS_DIRECTORY, info['folder']))
 
     for f in ['build', 'dist']:
-        if os.path.exists(f):
+        if exists(f):
             rmtree(f)
 
     print(f'Building {info['name']}...')
@@ -59,30 +60,18 @@ def build_application(app: Application):
         raise BuildFailure(f'Building {info['name']} failed. PyInstaller has non-zero return code: {retcode}')
     print(f'{info['name']} built - {(time.time() - start):.3f} seconds')
 
+    chdir(BUILDS_DIRECTORY)
+    dest = join('fulldist', info['name'])
+    if exists(dest):
+        rmtree(dest)
+    copytree(info['dist'], dest)
+    print(f'Copied to {dest}')
 
-def build_installer_fn(build_pc_push, build_pc_pull, build_pb_cli):
-    os.chdir(BUILDS_DIRECTORY)
-    dist_srcs = []
-    if build_pc_push:
-        dist_srcs.append(app_build_info[Application.PUSHB])
-    if build_pc_pull:
-        dist_srcs.append(app_build_info[Application.PULLB])
-    if build_pb_cli:
-        dist_srcs.append(app_build_info[Application.PB_CLI])
-
-    for a in dist_srcs:
-        if not os.path.exists(a['dist']):
-            raise BuildFailure(f'Dist folder: "{a['dist']}" does not exist despite being built')
-
-        dest = os.path.join('fulldist', a['name'])
-
-        if os.path.exists(dest):
-            rmtree(dest)
-
-        copytree(a['dist'], dest , dirs_exist_ok=True)
 
 
 
+def build_installer_fn(build_pc_push, build_pc_pull, build_pb_cli):
+    chdir(BUILDS_DIRECTORY)
     nsis_path = r'C:\Program Files (x86)\NSIS\makensis.exe'
     print('Starting NSI Installer Build')
     # Use NSIS to create the installers.

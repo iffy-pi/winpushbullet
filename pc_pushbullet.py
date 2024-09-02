@@ -11,7 +11,7 @@ script_loc_dir = path.split(path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 from scripts.PushBullet import PushType
-from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify, config_notif, config_working_files, TEMP_DIRECTORY
+from scripts.shared import checkFlags, getPushBullet, getArgumentForFlag, isLink, setHeadless, notify, config_notif, config_working_files, getTempDirectory
 
 config_notif('WinPushBullet', path.join(script_loc_dir, 'pushbullet-icon.ico'))
 config_working_files(script_loc_dir)
@@ -56,7 +56,7 @@ def getClipboardContent():
     pushingCopiedImage = True
 
     from PIL import ImageGrab
-    tempImagePath = f"{TEMP_DIRECTORY}\\screenshot.png"
+    tempImagePath = f"{getTempDirectory()}\\screenshot.png"
     img = ImageGrab.grabclipboard()
     img.save(tempImagePath)
 
@@ -110,7 +110,7 @@ def lastChangedFileInDir(folder: str):
 
 
 def latestFileInTemp():
-    return lastChangedFileInDir(TEMP_DIRECTORY)
+    return lastChangedFileInDir(getTempDirectory())
 
 
 def doPush(pushType, item: str, pushingStagingFile=False, pushingCopiedImage=False):
@@ -205,7 +205,7 @@ def main():
         if pushLatestTempFile:
             latestTempFile = latestFileInTemp()
             if latestTempFile is None:
-                raise Exception(f'No file in temp directory: {TEMP_DIRECTORY} to push')
+                raise Exception(f'No file in temp directory: {getTempDirectory()} to push')
 
 
         item, itemContentType = None, None

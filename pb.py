@@ -257,22 +257,22 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '-push',
-        '-push',
+        '--push',
+        '--push',
         action='store_true',
         help='Push content to PushBullet. By default pushes content from clipboard with automatic interpretation unless flags specify otherwise'
     )
 
     parser.add_argument(
-        '-pull',
-        '-pull',
+        '--pull',
+        '--pull',
         action='store_true',
         help='Pull content from PushBullet'
     )
 
     parser.add_argument(
-        '-peek',
-        '-peek',
+        '--peek',
+        '--peek',
         action='store_true',
         help='Peek at the last pushed item to PushBullet'
     )
@@ -282,14 +282,14 @@ def main():
         required=False,
         type=str,
         metavar='<string>',
-        help='Used with -push, Specifies how to interpret clipboard content for pushing. Can be "file", "link", "note" or "auto"'
+        help='Used with --push, Specifies how to interpret clipboard content for pushing. Can be "file", "link", "note" or "auto"'
     )
 
     parser.add_argument(
-        '-clip',
-        '-clip',
+        '--clip',
+        '--clip',
         action='store_true',
-        help='Used with -push, pushes content from clipboard with auto interpretation (equivalent to -clipas "auto")'
+        help='Used with --push, pushes content from clipboard with auto interpretation (equivalent to -clipas "auto")'
     )
 
     parser.add_argument(
@@ -297,7 +297,7 @@ def main():
         required=False,
         type=str,
         metavar='<file path>',
-        help='Specifies the source file to push to PushBullet, or the destination path to save the file pulled from PushBullet'
+        help='Used with --push or --pull, Specifies the source file to push to PushBullet, or the destination path to save the file pulled from PushBullet'
     )
 
     parser.add_argument(
@@ -305,7 +305,7 @@ def main():
         required=False,
         type=str,
         metavar='<url>',
-        help='Specifies the URL to push to PushBullet as a link'
+        help='Used with --push, Specifies the URL to push to PushBullet as a link'
     )
 
     parser.add_argument(
@@ -313,7 +313,7 @@ def main():
         required=False,
         type=str,
         metavar='<string>',
-        help='Specifies the note to push to PushBullet, can also be used along with -link to include a body for the URL'
+        help='Used with --push, Specifies the note to push to PushBullet, can also be used along with -link to include a body for the URL'
     )
 
     parser.add_argument(
@@ -321,21 +321,21 @@ def main():
         required=False,
         type=str,
         metavar='<string>',
-        help='Specifies the title of the note to push to PushBullet, can also specify title of link message when used with -link'
+        help='Used with --push, Specifies the title of the note to push to PushBullet, can also specify title of link message when used with -link'
     )
 
     parser.add_argument(
-        '-copy',
-        '-copy',
+        '--copy',
+        '--copy',
         action='store_true',
-        help='Used with -pull, copies pushed links, notes and images to your clipboard. Other file types are not supported.'
+        help='Used with --pull, copies pushed links, notes and images to your clipboard. Other file types are not supported.'
     )
 
     parser.add_argument(
-        '-view',
-        '-view',
+        '--view',
+        '--view',
         action='store_true',
-        help="Used with -pull, opens pushed links and files in your computer's browser"
+        help="Used with --pull, opens pushed links and files in your computer's browser"
     )
 
     parser.add_argument(
@@ -371,7 +371,7 @@ def main():
         '--get-token-only',
         '--get-token-only',
         action='store_true',
-        help="Prints access token in use"
+        help="Prints access token and only the access token"
     )
 
     options = parser.parse_args()
@@ -388,7 +388,8 @@ def main():
         return 0
 
     if options.get_token_only:
-        print(getAcessToken())
+        token = getAcessToken()
+        print(token if token is not None else "-1")
         return 0
 
     if options.set_token is not None:

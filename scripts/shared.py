@@ -1,5 +1,6 @@
 import os
 import keyring
+from keyring.errors import PasswordDeleteError
 from winotify import Notification
 from scripts.PushBullet import PushBullet
 
@@ -23,16 +24,21 @@ def config_working_files(home_dir):
     if not os.path.exists(TEMP_DIRECTORY):
         os.makedirs(TEMP_DIRECTORY, exist_ok=True)
 
+def getTempDirectory():
+    return TEMP_DIRECTORY
 
 def getAcessToken():
     return keyring.get_password(CRED_SERVICE_NAME, CRED_USER_NAME)
 
 def setAccessToken(token):
-    keyring.set_password(
-        CRED_SERVICE_NAME,
-        CRED_USER_NAME,
-        token
-    )
+    # For some reason keyring creates a new credential if the current one already exists,
+    # So delete it and reset it
+    try:
+        keyring.delete_password(CRED_SERVICE_NAME, CRED_USER_NAME)
+    except PasswordDeleteError:
+        # In case the password doesn't exist yet
+        pass
+    keyring.set_password(CRED_SERVICE_NAME, CRED_USER_NAME, token)
 
 def getPushBullet():
     accessToken = getAcessToken()
@@ -119,7 +125,7 @@ def notif(title, body="", label="See Here", url=None, filePath=None):
     if len(body) > 135:
         body = f"{body[:135]}..."
 
-    toast = Notification(NOTIF_APP_ID, title, msg=body, icon=NOTIF_ICON)
+    toast = Notification('WinPushBullet', title, msg=body, icon=NOTIF_ICON)
 
     if url is not None:
         toast.add_actions(label=label, launch=url)

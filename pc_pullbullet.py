@@ -8,7 +8,7 @@ import pyperclip
 script_loc_dir = split(realpath(__file__))[0]
 if script_loc_dir not in sys.path:  
     sys.path.append(script_loc_dir)
-from scripts.shared import checkFlags, getArgumentForFlag, setHeadless, notify, getPushBullet, isLink, TEMP_DIRECTORY, config_notif, config_working_files
+from scripts.shared import checkFlags, getArgumentForFlag, setHeadless, notify, getPushBullet, isLink, getTempDirectory, config_notif, config_working_files
 from scripts.PushBullet import PushObject, PushType
 
 config_notif('WinPushBullet', join(script_loc_dir, 'pullbullet-icon.ico'))
@@ -41,14 +41,14 @@ def openInBrowser(link):
 
 def openTextWithOS(text:str):
     # Saves the text to a temp file and then opens that temp file
-    tempFile = f"{TEMP_DIRECTORY}\\temp.txt"
+    tempFile = f"{getTempDirectory()}\\temp.txt"
     with open(tempFile, "w") as file:
         file.write(text)
     startfile(tempFile, "open")
 
 def copyImageToClipboard(fileExt, fileContent: bytes):
     # save the image to a temp file
-    tempFile = f"{TEMP_DIRECTORY}\\temp." + fileExt
+    tempFile = f"{getTempDirectory()}\\temp." + fileExt
     with open(tempFile, 'wb') as file:
         file.write(fileContent)
 
