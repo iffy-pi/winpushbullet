@@ -5,10 +5,10 @@ PushBullet is a service that allows you to share files between your different de
 I use WinPushBullet to quickly share files between my Windows PC and my Apple devices, achieving AirDrop like functionality.
 [How To Install](#installing-and-configuring-winpushbullet)
 
-## Functions and Features
+# Functions and Features
 WinPushBullet comes with the following features:
 
-### Hotkeys 
+## Hotkeys 
 WinPushBullet generates a hotkey script (which can be loaded using AutoHotKey v2) with the following functions
 _Note: Hotkeys can be edited to match your desired usecase, simply edit the generated hot key script file and reload it in AutoHotKey. You can also view the [Script Specification](#script-specification) to customize the actions of WinPushBullet itself_
 
@@ -24,10 +24,10 @@ _Note: Hotkeys can be edited to match your desired usecase, simply edit the gene
 | 6   | `Ctrl`+`Alt`+`.` | View Content                        | Opens text in default text editor, opens links and files in browser                                                       |
 | 7   | `Ctrl`+`Alt`+`/` | Push Browser URL (Brave and Chrome) | Selects browser URL with Alt+D, copies it with Ctrl+C, and pushes it. If valid file URI, file being pointed to is pushed. |
 
-### File Explorer Context Menu Actions
+## File Explorer Context Menu Actions
 You also have access to the following actions when you right-click in File Explorer.
 
-#### Right-Click Explorer Background
+### Right-Click Explorer Background
 - Pull File To Here
   - Takes the last push (which is assumed to be a file) and saves it as its pushed name to the open directory
 - Pull File To Here and Rename
@@ -35,33 +35,33 @@ You also have access to the following actions when you right-click in File Explo
 - Push Path of Current Directory
   - Pushes the current directory path as a file
 
-#### Right-Click on Selected Folder
+### Right-Click on Selected Folder
 - Push Directory Path
   - Pushes the current directory path as a file
 
-#### Right-Click on Selected File
+### Right-Click on Selected File
 - Push File
   - Pushes the selected file to PushBullet
 
 # Installing and Configuring WinPushBullet
-## Requirements
+### Requirements
 - A PushBullet Account and your access token
 - To generate your access token, go to https://www.pushbullet.com/#settings/account > Access Tokens > Create Access Token
 - AutoHotKey v2: https://www.autohotkey.com/v2/
 
-## How-To
+### How-To
 Download and run the latest released installer.
 
-## Configure Your Apple Device(s) (Optional)
+### Configure Your Apple Device(s) (Optional)
 I also designed some Apple shortcuts which use the PushBullet API to allow you to use PushBullet on your Apple devices.
 
-### Requirements
+#### Requirements
 - A PushBullet Account (premium not required) and your access token
 	- To generate your access token, go to https://www.pushbullet.com/#settings/account > Access Tokens > Create Access Token
 - Apple Shortcuts
   - Make sure to allow "Download shortcuts from untrusted sources" in your settings.
 
-### Install the shortcuts
+#### Install the shortcuts
 You can download and install the PushBullet and PullBullet shortcuts to push and pull content from the PushBullet Server:
 - PushBullet: https://routinehub.co/shortcut/15515/
 - PullBullet: https://routinehub.co/shortcut/15516/
