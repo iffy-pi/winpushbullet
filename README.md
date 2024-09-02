@@ -51,6 +51,7 @@ You also have access to the following actions when you right-click in File Explo
 
 ### How-To
 Download and run the latest released installer.
+Note: Some Windows 10 system may not work with the notification version used in the main installer. In those cases, please download the alternate installer provided. If you still have notification issues, please make a GitHub issue.
 
 ### Configure Your Apple Device(s) (Optional)
 I also designed some Apple shortcuts which use the PushBullet API to allow you to use PushBullet on your Apple devices.
