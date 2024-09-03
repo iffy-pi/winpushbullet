@@ -197,15 +197,7 @@ Function ConfigPageLeave
 	${NSD_GetState} $ChkBxRunHotKeyNow $ChkBxState
 	${If} $ChkBxState == ${BST_CHECKED}
 		${NSD_GetText} $TxtHotkeyScriptAddr $0
-		; Check to make sure autohot key exists
-		IfFileExists 'C:\Program Files\AutoHotkey\AutoHotkey.exe' load_script
-		MessageBox MB_OK "Your AutoHotKey installation could not be found.$\nYou will need to load the hotkey script ($0) manually."
-		GoTo end_this_if
-
-		load_script:
-		Exec '"C:\Program Files\AutoHotkey\AutoHotkey.exe" "$0"'
-
-		end_this_if:
+		ExecShell "" "$0"
 	${EndIf}
 
 	; If they wanted it added at start up
