@@ -1,7 +1,9 @@
 import os
+import platform
 import keyring
 from keyring.errors import PasswordDeleteError
-from winotify import Notification
+from winotify import Notification as Win11Toast
+from win10toast import ToastNotifier as Win10Toast
 from scripts.PushBullet import PushBullet
 
 CRED_SERVICE_NAME = "WinPushBullet-Access-Token"
@@ -112,20 +114,9 @@ def getArgumentForFlag(args:list[str], flag:str) -> str|None:
     args.pop(flIndex)
     return arg
 
-def scriptErrNotif(errorObj, logFilePath):
-    notif("An error occured", body=str(errorObj), label="See log file", filePath=logFilePath)
 
-def config_notif(app_id, icon):
-    global NOTIF_ICON
-    global NOTIF_APP_ID
-    NOTIF_ICON = icon
-    NOTIF_APP_ID = app_id
-
-def notif(title, body="", label="See Here", url=None, filePath=None):
-    if len(body) > 135:
-        body = f"{body[:135]}..."
-
-    toast = Notification('WinPushBullet', title, msg=body, icon=NOTIF_ICON)
+def system_notification(title, body="", label="See Here", url=None, filePath=None):
+    toast = Win11Toast('WinPushBullet', title, msg=body, icon=NOTIF_ICON)
 
     if url is not None:
         toast.add_actions(label=label, launch=url)
@@ -136,6 +127,32 @@ def notif(title, body="", label="See Here", url=None, filePath=None):
         toast.add_actions(label=label, launch=path)
 
     toast.show()
+
+def win10_notification(title, body=""):
+    toast = Win10Toast()
+    if body == "":
+        body = "from WinPushBullet"
+    toast.show_toast(title, body, icon_path=NOTIF_ICON, threaded=True)
+
+
+def notif(title, body="", label="See Here", url=None, filePath=None):
+    if len(body) > 135:
+        body = f"{body[:135]}..."
+
+    if platform.release() == '10':
+        win10_notification(title, body)
+    else:
+        system_notification(title=title, body=body, label=label, url=url, filePath=filePath)
+
+def scriptErrNotif(errorObj, logFilePath):
+    notif("An error occured", body=str(errorObj), label="See log file", filePath=logFilePath)
+
+def config_notif(app_id, icon):
+    global NOTIF_ICON
+    global NOTIF_APP_ID
+    NOTIF_ICON = icon
+    NOTIF_APP_ID = app_id
+
 
 def notify(title, body="", attachmentLabel=None, attachmentPath=None):
     if HEADLESS:
