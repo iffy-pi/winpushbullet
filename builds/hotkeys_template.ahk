@@ -1,55 +1,51 @@
-#NoEnv
-#SingleInstance, Force
-SendMode, Input
-SetBatchLines, -1
-SetWorkingDir, %A_ScriptDir%
-
+#Requires AutoHotkey v2.0
 ; Ctrl + Alt + [ : Hotkey #1
-^![:: ;Ctrl+Alt+[
+^![:: {
     ; Pull content to clipboard
-    Run, <INSTDIR>\PC_PullBullet\PC_PullBullet.exe "--headless" "-behaviour" "copy"
-    return
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"copy`""
+
+}
 
 ; Ctrl + Alt + ] : Hotkey #2
-^!]:: ;Ctrl+Alt+]
+^!]:: {
     ; push clipboard content
-    Run, <INSTDIR>\PC_PushBullet\PC_PushBullet.exe "--headless" "--clip"
-    return
+    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--clip`""
+}
 
 ; Ctrl + Alt + ; : Hotkey #3
-^!;:: ;Ctrl+Alt+;
+^!;:: {
     ; pull and paste, pull content to clipboard and paste
-    Run, <INSTDIR>\PC_PullBullet\PC_PullBullet.exe "--headless" "-behaviour" "copy"
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"copy`""
     sleep 100
-    Send, ^v
-    return
+    Send "^v"
+}
 
 ; Ctrl + Alt + ' : Hotkey #4
-^!':: ;Ctrl+Alt+'
+^!':: {
     ; do ctrl c and then push
-    Send, ^c
-    sleep 100
-    Run, <INSTDIR>\PC_PushBullet\PC_PushBullet.exe "--headless" "--clip"
-    return
+    Send "^c"
+    Sleep 100
+    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--clip`""
+}
 
 ; Ctrl + Alt + , : Hotkey #5
-^!,:: ;Ctrl+Alt+,
+^!,:: {
     ; pull and save to file
-    Run, <INSTDIR>\PC_PullBullet\PC_PullBullet.exe "--headless" "-behaviour" "save" "--handleAsFile"
-    return
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"save`" `"--handleAsFile`""
+}
 
 ; Ctrl + Alt + . : Hotkey #6
-^!.:: ;Ctrl+Alt+.
+^!.:: {
     ; view content
-    Run, <INSTDIR>\PC_PullBullet\PC_PullBullet.exe "--headless" "-behaviour" "view"
-    return
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"view`""
+}
 
 ; Ctrl + Alt + / : Hotkey #7
-^!/:: ;Ctrl+Alt+/
+^!/:: {
     ; Select address bar with Alt+D, copy with Ctrl+C and push
-    Send, !d
-    sleep 100
-    Send, ^c
-    sleep 100
-    Run, <INSTDIR>\PC_PushBullet\PC_PushBullet.exe "--headless" "--link" "--convertFileURI"
-    return
+    Send "!d"
+    Sleep 100
+    Send "^c"
+    Sleep 100
+    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--link`" `"--convertFileURI`""
+}

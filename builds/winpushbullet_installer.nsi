@@ -159,7 +159,7 @@ Function ConfigPage
 	Pop $TxtAccessToken
 	${NSD_OnChange} $TxtAccessToken ConfigPage_OnTxtAccessTokenChange
 
-	${NSD_CreateLabel} 0 45u 100% 12u "Save address of generated HotKey script"
+	${NSD_CreateLabel} 0 45u 100% 12u "Save hotkeys configuration file to:"
 	Pop $LblHotkeyGen
 
 	${NSD_CreateText} 0 57u 78% 13u "$INSTDIR\WinPushBullet_Hotkeys.ahk"
@@ -170,11 +170,13 @@ Function ConfigPage
 	Pop $BtnBrowseHotkeyAddr
 	${NSD_OnClick} $BtnBrowseHotkeyAddr ConfigPage_OnBtnBrowse
 
-	${NSD_CreateCheckBox} 0 72u 100% 13u "Load hotkey script after install is complete (requires AutoHotKey)"
+	${NSD_CreateCheckBox} 0 72u 100% 13u "Enable WinPushBullet hotkeys after installation (Requires AutoHotKey v2)"
 	Pop $ChkBxRunHotKeyNow
+	${NSD_SetState} $ChkBxRunHotKeyNow ${BST_CHECKED}
 
-	${NSD_CreateCheckBox} 0 85u 100% 13u "Automatically load hotkey script at start up"
+	${NSD_CreateCheckBox} 0 85u 100% 13u "Automatically enable WinPushBullet hotkeys on start up (Requires AutoHotKey v2)"
 	Pop $ChkBxAddToStart
+	${NSD_SetState} $ChkBxAddToStart ${BST_CHECKED}
 
 	nsDialogs::Show
 FunctionEnd
