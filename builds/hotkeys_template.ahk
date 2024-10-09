@@ -1,8 +1,10 @@
 #Requires AutoHotkey v2.0
+#SingleInstance Force
+
 ; Ctrl + Alt + [ : Hotkey #1
 ^![:: {
     ; Pull content to clipboard
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"copy`""
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
 
 }
 
@@ -15,7 +17,7 @@
 ; Ctrl + Alt + ; : Hotkey #3
 ^!;:: {
     ; pull and paste, pull content to clipboard and paste
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"copy`""
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
     sleep 100
     Send "^v"
 }
@@ -31,13 +33,13 @@
 ; Ctrl + Alt + , : Hotkey #5
 ^!,:: {
     ; pull and save to file
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"save`" `"--handleAsFile`""
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"save`" `"--handleAsFile`""
 }
 
 ; Ctrl + Alt + . : Hotkey #6
 ^!.:: {
     ; view content
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-behaviour`" `"view`""
+    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"view`""
 }
 
 ; Ctrl + Alt + / : Hotkey #7

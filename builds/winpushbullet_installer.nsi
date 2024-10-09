@@ -280,12 +280,12 @@ Function AddFileExplorerContextMenuItems
 	; Add "Pull file to here"
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File" "" "&Pull file to here"
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File" "Icon" "$INSTDIR\PC_PullBullet\PC_PullBullet.exe"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-behaviour" "save" "-saveToDir" "%V"'
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V"'
 
 	; Add "Pull file to here and rename...."
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename" "" "&Pull file to here and rename..."
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename" "Icon" "$INSTDIR\PC_PullBullet\PC_PullBullet.exe"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-behaviour" "save" "-saveToDirWithDlg" "%V"'
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V" "--explorer"'
 FunctionEnd
 
 ;--------------------------------------------------------------------------------------------------------------------------------

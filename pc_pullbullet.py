@@ -1,6 +1,6 @@
 import sys
 from os import startfile
-from os.path import join, split, realpath, splitext, exists
+from os.path import join, split, realpath, splitext, exists, expanduser
 from enum import Enum
 
 import pyperclip
@@ -14,14 +14,22 @@ from scripts.PushBullet import PushObject, PushType
 config_notif('WinPushBullet', join(script_loc_dir, 'pullbullet-icon.ico'))
 config_working_files(script_loc_dir)
 
+ACTION = None
 
 IMAGE_FILE_EXTENSIONS = (
-    'png',
-    'jpg',
-    'jpeg',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+    '.tif',
+    '.tiff',
+    '.svg',
+    '.bmp',
+    '.gif',
+    '.heic'
 )
 
-class ScriptBehaviour(Enum):
+class ScriptAction(Enum):
     DEFAULT = 'default'
     COPY_CONTENT = 'copy'
     VIEW_CONTENT = 'view'
@@ -30,7 +38,10 @@ class ScriptBehaviour(Enum):
 class FileContainer:
     def __init__(self, name:str, url: str, fileBytes:bytes, pushType:PushType):
         self.name =  name
-        self.ext = splitext(name)[1].replace('.', '')
+        self.dest = None
+        self.destExt = None
+        self.useExplorer = False
+        self.ext = splitext(name)[1]
         self.url = url
         self.bytes = fileBytes
         self.pushType = pushType
@@ -48,7 +59,7 @@ def openTextWithOS(text:str):
 
 def copyImageToClipboard(fileExt, fileContent: bytes):
     # save the image to a temp file
-    tempFile = f"{getTempDirectory()}\\temp." + fileExt
+    tempFile = f"{getTempDirectory()}\\temp" + fileExt
     with open(tempFile, 'wb') as file:
         file.write(fileContent)
 
@@ -74,50 +85,102 @@ def copyImageToClipboard(fileExt, fileContent: bytes):
 def isCopyableImage(fileExt):
     return fileExt in IMAGE_FILE_EXTENSIONS
 
-def getCommonName(pt:PushType):
-    return "Link" if PushType == PushType.LINK else "Note"
+def getPushTypeStr(pt:PushType):
+    match pt:
+        case PushType.TEXT:
+            return "Text"
+        case PushType.LINK:
+            return "Link"
+        case PushType.FILE:
+            return "File"
+        case _:
+            raise Exception('Unknown type')
+
+
+def notifyFileSaved(fc: FileContainer, saveDest: str):
+    notify(
+        f'Pushed File "{fc.name}" saved' if fc.pushType == PushType.FILE else f'Pushed {getPushTypeStr(fc.pushType)} saved',
+        body=f'Destination: {saveDest}'
+    )
+
+
+def saveWithFileExplorer(fc: FileContainer):
+    from scripts.FileExplorerWindow import FileExplorerWindow
+    fileExists = fc.dest is not None and exists(fc.dest)
+
+    dlgDir = expanduser('~')
+    dlgFile = fc.name
+    dlgExt = fc.ext
+
+    if fc.dest is not None:
+        dlgDir = split(fc.dest)[0]
+        dlgFile = split(fc.dest)[1]
+        dlgExt = fc.destExt
+
+    windowTitle = f"Save Pushed {getPushTypeStr(fc.pushType)}"
+    fileTypes = [('Current File', f'*{dlgExt}'), ('All Files', '*.*')]
+
+    if fileExists:
+        windowTitle += f' - File "{join(dlgDir, dlgFile)}" already exists'
+        i = 1
+        base = splitext(dlgFile)[0]
+        while exists(join(dlgDir, dlgFile)):
+            dlgFile = f'{base} ({i}){dlgExt}'
+            i += 1
+
+    if fc.pushType != PushType.FILE:
+        dlgFile = None
+
+        content = fc.bytes.decode('utf-8').replace('\n',' ').replace('\t', ' ').replace('\r', ' ')
+        maxChars = 90
+
+        if len(content) > maxChars:
+            content = content[:maxChars - (5 if fc.pushType == PushType.TEXT else 3)]
+            if fc.pushType == PushType.TEXT:
+                content = f'"{content}"...'
+            else:
+                content = f'{content}...'
+        else:
+            if fc.pushType == PushType.TEXT:
+                content = f'"{content}"'
+
+        windowTitle = f"Save Pushed {getPushTypeStr(fc.pushType)}: {content}"
+
+
+    saved, addr = FileExplorerWindow().save(fc.bytes,
+                              windowTitle=windowTitle,
+                              path=(dlgDir, dlgFile),
+                              fileTypes=fileTypes)
+
+    if saved:
+        notifyFileSaved(fc, addr)
+
 
 def saveFile(fc: FileContainer):
-    # Save file method for -saveToDir
-    # If there is a file that exists at that location, default to file explorer dialog
-    if SAVE_DIRECTORY_PATH is not None and not SAVE_TO_DIR_USING_DLG and not exists(join(SAVE_DIRECTORY_PATH, fc.name)):
-        with open(join(SAVE_DIRECTORY_PATH, fc.name), 'wb') as file:
-            file.write(fc.bytes)
+    if fc.dest is not None:
+        fd = split(fc.dest)[0]
+        if not exists(fd):
+            raise Exception(f'Save directory for push item "{fd}" does not exist')
 
-        title = 'File {} saved to directory'.format(fc.name)
+        if exists(fc.dest):
+            fc.useExplorer = True
 
-        if FORCING_TYPE_TO_FILE:
-            title = 'Pushed {} was saved to the directory as {}'.format(getCommonName(fc.pushType), fc.name)
-
-        notify(
-            title,
-            body='Directory: {}'.format(SAVE_DIRECTORY_PATH),
-        )
+    if fc.dest is None or fc.useExplorer or fc.pushType != PushType.FILE:
+        saveWithFileExplorer(fc)
         return
 
-    # Default Save File Method: Use explorer dialog
-    # -saveWithDlg will override SAVE_DIRECTORY_PATH
-    from scripts.FileExplorerWindow import FileExplorerWindow
+    # Save the file in the destination location
+    with open(fc.dest, 'wb') as file:
+        file.write(fc.bytes)
 
-    windowTitle = "Save Pushed File"
-    fileTypes = [('Current File', f'*.{fc.ext}'), ('All Files', '*.*')]
-
-    # If the type is not a file type then we should
-    if TREATING_TYPE_AS_FILE in [ PushType.LINK, PushType.TEXT ]:
-        windowTitle = "Save {}".format("Link" if TREATING_TYPE_AS_FILE == PushType.LINK else "Note")
-        fileTypes = [('Plain Text', '*.txt'), ('All Files', '*.*')]
-
-    FileExplorerWindow().save(fc.bytes,
-                                     windowTitle=windowTitle,
-                                     path=(SAVE_DIRECTORY_PATH, fc.name),
-                                     fileTypes=fileTypes)
+    notifyFileSaved(fc, fc.dest)
 
 def handleImageFile(fc: FileContainer):
-    if BEHAVIOUR == ScriptBehaviour.VIEW_CONTENT:
+    if ACTION == ScriptAction.VIEW_CONTENT:
         openInBrowser(fc.url)
         return
 
-    if BEHAVIOUR == ScriptBehaviour.SAVE_ALL_FILES:
+    if ACTION == ScriptAction.SAVE_ALL_FILES:
         saveFile(fc)
         return
 
@@ -136,7 +199,7 @@ def handleFile(fc: FileContainer):
         return
 
     # Behaviour for other files
-    if BEHAVIOUR == ScriptBehaviour.VIEW_CONTENT:
+    if ACTION == ScriptAction.VIEW_CONTENT:
         openInBrowser(fc.url)
         return
 
@@ -145,7 +208,7 @@ def handleFile(fc: FileContainer):
     saveFile(fc)
 
 def handleLink(url):
-    if BEHAVIOUR == ScriptBehaviour.COPY_CONTENT:
+    if ACTION == ScriptAction.COPY_CONTENT:
         pyperclip.copy(url)
         notify(
             'Link has been copied to your clipboard',
@@ -158,7 +221,7 @@ def handleLink(url):
 
 def handleNote(text):
 
-    if BEHAVIOUR == ScriptBehaviour.VIEW_CONTENT:
+    if ACTION == ScriptAction.VIEW_CONTENT:
         openTextWithOS(text)
         return
 
@@ -169,101 +232,93 @@ def handleNote(text):
         str(text)
     )
 
-def getBehaviour(args) -> ScriptBehaviour:
-    # read the behaviour argument
-    selBhvr = getArgumentForFlag(args, '-behaviour')
-    if selBhvr is None:
-        return ScriptBehaviour.DEFAULT
-    selBhvr = selBhvr.lower()
+def getAction(args) -> ScriptAction:
+    selAction = getArgumentForFlag(args, '-action')
+    if selAction is None:
+        return ScriptAction.DEFAULT
+    selAction = selAction.lower()
 
-    availBhvrs = [
-        ScriptBehaviour.DEFAULT,
-        ScriptBehaviour.COPY_CONTENT,
-        ScriptBehaviour.VIEW_CONTENT,
-        ScriptBehaviour.SAVE_ALL_FILES,
+    availActions = [
+        ScriptAction.DEFAULT,
+        ScriptAction.COPY_CONTENT,
+        ScriptAction.VIEW_CONTENT,
+        ScriptAction.SAVE_ALL_FILES,
     ]
 
-    for bhvr in availBhvrs:
-        if selBhvr == bhvr.value:
-            return bhvr
+    for action in availActions:
+        if selAction == action.value:
+            return action
 
-    raise Exception(f'Unknown behaviour: {selBhvr}')
+    raise Exception(f'Unknown behaviour: {selAction}')
 
-def makeFileContainerFromPush(push:PushObject) -> FileContainer:
+def makeFileContainerFromPush(push:PushObject, saveDir: str|None, savePath: str|None, useExplorer: bool) -> FileContainer:
     match push.type:
         case PushType.TEXT:
-            return FileContainer('text.txt', 'N/A', push.body.encode("utf-8"), push.type)
+            fc = FileContainer('text.txt', 'N/A', push.body.encode("utf-8"), push.type)
 
         case PushType.LINK:
-            return FileContainer('link.txt', push.url, push.url.encode("utf-8"), push.type)
+            fc = FileContainer('link.txt', push.url, push.url.encode("utf-8"), push.type)
 
         case PushType.FILE:
-            return FileContainer(push.filename, push.fileURL, push.getFileBinary(), push.type)
+            fc = FileContainer(push.filename, push.fileURL, push.getFileBinary(), push.type)
 
         case _:
             raise Exception('Unidentified type {}'.format(push.type))
 
+    fc.useExplorer = useExplorer
+
+    if savePath is not None:
+        fc.dest = savePath.replace('"', '')
+        fc.destExt = splitext(savePath)[1]
+        return fc
+
+    if saveDir is not None:
+        fc.dest = join(saveDir.replace('"', ''), fc.name)
+        fc.destExt = fc.ext
+        return fc
+
+    return fc
 
 def main():
     headless = True
     try:
-        global SAVE_DIRECTORY_PATH
-        global SAVE_TO_DIR_USING_DLG
-        global BEHAVIOUR
-        global TREATING_TYPE_AS_FILE
-        global FORCING_TYPE_TO_FILE
-
-        SAVE_TO_DIR_USING_DLG = False
-        SAVE_DIRECTORY_PATH = None
-        TREATING_TYPE_AS_FILE = None
-        FORCING_TYPE_TO_FILE = False
+        global ACTION
 
         args = sys.argv[1:]
 
-        headless, handleAsFile = checkFlags(args, flags=("--headless", "--handleAsFile"))
+        headless, handleAllTypesAsFile, useExplorer = checkFlags(args, flags=("--headless", "--handleAsFile", "--explorer"))
         setHeadless(headless)
 
-        BEHAVIOUR = getBehaviour(args)
-        saveToDirArg = getArgumentForFlag(args, "-saveToDir")
-        saveToDirWithDlgArg = getArgumentForFlag(args, "-saveToDirWithDlg")
+        ACTION = getAction(args)
+        saveIn = getArgumentForFlag(args, "-saveIn")
+        saveAs = getArgumentForFlag(args, "-saveAs")
 
-        if saveToDirArg is not None and saveToDirWithDlgArg is not None:
-            raise Exception('Conflicting flags: Cannot use "-saveToDir" and "-saveToDirWithDlg" together')
-
-        if saveToDirWithDlgArg is not None:
-            SAVE_DIRECTORY_PATH = saveToDirWithDlgArg
-            SAVE_TO_DIR_USING_DLG = True
-        elif saveToDirArg is not None:
-            SAVE_DIRECTORY_PATH = saveToDirArg
-
-        if SAVE_DIRECTORY_PATH is not None:
-            SAVE_DIRECTORY_PATH = SAVE_DIRECTORY_PATH.replace('"', '')
-            if not exists(SAVE_DIRECTORY_PATH):
-                raise Exception('Save Directory does not exist!')
+        if saveIn is not None and saveAs is not None:
+            raise Exception('Conflicting flags: Cannot use "-saveIn" and "-saveAs" together')
 
         push = getPushBullet().pull(1)[0]
 
-        if handleAsFile or BEHAVIOUR == ScriptBehaviour.SAVE_ALL_FILES:
-            fc = makeFileContainerFromPush(push)
-            TREATING_TYPE_AS_FILE = push.type
-            FORCING_TYPE_TO_FILE = push.type != PushType.FILE
+        if handleAllTypesAsFile or ACTION == ScriptAction.SAVE_ALL_FILES:
+            fc = makeFileContainerFromPush(push, saveIn, saveAs, useExplorer)
             handleFile(fc)
-        else:
-            match push.type:
-                case PushType.TEXT:
-                    if isLink(push.body):
-                        handleLink(push.body)
-                    else:
-                        handleNote(push.body)
+            return 0
 
-                case PushType.LINK:
-                    handleLink(push.url)
+        match push.type:
+            case PushType.TEXT:
+                if isLink(push.body):
+                    handleLink(push.body)
+                else:
+                    handleNote(push.body)
 
-                case PushType.FILE:
-                    handleFile(makeFileContainerFromPush(push))
+            case PushType.LINK:
+                handleLink(push.url)
 
-                case _:
-                    raise Exception('Unidentified type {}'.format(push['type']))
+            case PushType.FILE:
+                handleFile(makeFileContainerFromPush(push, saveIn, saveAs, useExplorer))
+
+            case _:
+                raise Exception('Unidentified type {}'.format(push['type']))
+        return 0
     
     except Exception as e:
         from scripts.shared import handleError

@@ -69,8 +69,8 @@ This is the script used to get content from PushBullet onto the computer. It is 
 ```
 pc_pullbullet
 [--headless] [--handleAsFile]
-[-behaviour <behaviour string>]
-[-saveToDir <directory path>] [-saveToDirWithDlg <directory path>]
+[-action <string>]
+[-saveIn <directory>] [-saveAs <file path>] [--explorer]
 ```
 
 - `--headless`
@@ -79,32 +79,37 @@ pc_pullbullet
     - This will force all other push types (text, url) to be treated as if they were a pushed file.
         - Text pushes are treated as text files
         - URL pushes are treated as text files
-- `-behaviour <behaviour string>`
-    - The 'behaviour' for the script is the actions that are performed with the retrieved push item: The item can be copied to clipboard, saved, opened in the browser etc.
+- `-action <string>`
+    - This flag determines the actions that are performed with the retrieved push item: The item can be copied to clipboard, saved, opened in the browser etc.
     - If the flag not specified, the `default` behaviour will be used
-    - Available Behaviour Types:
+    - Available Actions:
         - Default: `default`
             - Text        : Copied to clipboard
             - URLs        : Opened in browser
-            - Image Files : (png,jpg) Copied to clipboard
+            - Image Files : Copied to clipboard
             - Other Files : Saved to system using **save method**
         - Copy Only: `copy`
             - Text        : Copied to clipboard
             - URLs        : Copied to clipboard
             - Image Files : Copied to clipboard
-            - Other Files : Same as `default` behaviour
+            - Other Files : Same as `default` action
         - View Content: `view`
             - Text        : A temporary text file is created and opened
             - URLs        : Opened in browser
             - Image Files : Opened in browser
             - Other Files : Opened in browser
         - Save Files: `save`
-            - Text        : Text is treated as text file, saved to system using **save method** (same as using `--handleAsFile`)
-            - URLs        : Link is treated as text file, saved to system using **save method** (same as using `--handleAsFile`)
+            - Text        : Text is treated as text file, saved to system using **save method**
+            - URLs        : Link is treated as text file, saved to system using **save method**
             - Image Files : Saved to system using **save method**
             - Other Files : Saved to system using **save method**
-    - The **save method** is the method used for saving a given file
-        - Default: Save using a file explorer dialog opened to default location
-        - Save To Directory (specified with `-saveToDir <path>` flag): Saves the file to a specified directory
-            - If there is already a file with the pushed file name in that directory, the file explorer dialog will be given to allow the user to rename the file
-        - Save To Directory with Dialog (specified with `-saveToDirWithDlg <path>` flag): Opens File Explorer Dialog in the specified directory
+    - The **save method** is how the script handles saving the pushed file to your computer. This can be controlled using the `-saveIn`, `-saveAs` and `--explorer` flags
+        - If no flags are specified, the default save method is used: A File Explorer dialog is opened to your home directory for you to save the file
+        - If the `-saveIn` flag is specified, the pushed file will be saved to the specified directory using its pushed file name
+            - If the directory does not exist, the script will raise an error
+            - If there is already a file with the same name as the pushed file, a File Explorer dialog will be opened for you to handle the conflict
+        - The `-saveAs` flag is used to specify the save directory and saved file name, allowing you to change the name or even extension of the saved file
+            - If the directory in the save path does not exist, the script will raise an error
+            - If there already exists a file at the given path, a File Explorer dialog will be opened for you to handle the conflict
+        - If the `--explorer` flag is used, a File Explorer dialog will always be opened for saving the file
+            - The selected save location in the dialog will use the paths given from `-saveIn` or `-saveAs` flags if available, otherwise defaults to the user's home directory.

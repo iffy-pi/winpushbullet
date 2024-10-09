@@ -180,7 +180,7 @@ class PushBullet:
         mimeType, _ = mimetypes.MimeTypes().guess_type(filename)
 
         # check if its under the limit
-        if self.premium:
+        if not self.premium:
             # checks if file is greater than 25 MB
             if ( (sys.getsizeof(fileContents) +33) / (1024*1024)) > 25:
                 raise exceptions.InvalidConfiguration('File size is too big!')

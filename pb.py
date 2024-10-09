@@ -293,14 +293,6 @@ def main():
     )
 
     parser.add_argument(
-        "-file",
-        required=False,
-        type=str,
-        metavar='<file path>',
-        help='Used with --push or --pull, Specifies the source file to push to PushBullet, or the destination path to save the file pulled from PushBullet'
-    )
-
-    parser.add_argument(
         "-link",
         required=False,
         type=str,
@@ -322,6 +314,14 @@ def main():
         type=str,
         metavar='<string>',
         help='Used with --push, Specifies the title of the note to push to PushBullet, can also specify title of link message when used with -link'
+    )
+
+    parser.add_argument(
+        "-file",
+        required=False,
+        type=str,
+        metavar='<file path>',
+        help='When used with --push, specifies the address of file to push to PushBullet. When used with --pull, specifies the destination address to save the file being pulled from PushBullet'
     )
 
     parser.add_argument(
@@ -416,7 +416,7 @@ def main():
     elif options.pull:
         pull(saveTo=options.file, copyItem=options.copy, openItem=options.view)
     else:
-        err("No action provided")
+        err("No action provided, see usage with 'pb -h' or 'pb --help'")
 
 
 if __name__ == "__main__":

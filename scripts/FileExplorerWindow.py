@@ -50,23 +50,23 @@ class FileExplorerWindow():
             return None
         return file.name
 
-    def save(self, binaryContent:bytes, path:tuple=(None, None), windowTitle:str=None, fileTypes:list[tuple[str, str]]=None) -> bool:
+    def save(self, binaryContent:bytes, path:tuple=(None, None), windowTitle:str=None, fileTypes:list[tuple[str, str]]=None) -> tuple[bool, str|None]:
         """
         Saves the binaryContent using a save file explorer window
         :param binaryContent: The bytes of the file to be saved
         :param path: A tuple of (folder, filename) that the explorer window will open to
         :param windowTitle: The title of the explorer window
         :param fileTypes: The list of file type extensions e.g. [('All Files', '*.*'), ('Plain Text', '*.txt')]
-        :return: boolean : True if the file is saved, false if it is not (user cancelled)
+        :return: tuple: Boolean which is true if the user saved, str of the file address
         """
-        filename = self.getSavePath(path=path, windowTitle=windowTitle, fileTypes=fileTypes)
-        if filename is None:
-            return False
+        fileAddress = self.getSavePath(path=path, windowTitle=windowTitle, fileTypes=fileTypes)
+        if fileAddress is None:
+            return False, fileAddress
 
-        with open(filename, 'wb') as file:
+        with open(fileAddress, 'wb') as file:
             file.write(binaryContent)
 
-        return True
+        return True, fileAddress
 
     
     def open(self, path: tuple=(None,None), title:str=None) -> str:
