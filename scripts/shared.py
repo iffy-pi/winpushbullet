@@ -205,7 +205,7 @@ def handleError(errorObj, headless):
     # something went wrong
     if headless:
         # save to log file first
-        with open(ERROR_LOG_FILE, 'w') as f:
+        with open(ERROR_LOG_FILE, 'w', encoding='utf-8') as f:
             f.write(traceback.format_exc())
 
         # do error notification
