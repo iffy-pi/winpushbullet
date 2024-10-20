@@ -4,12 +4,6 @@ PushBullet is a service that allows you to share files between your different de
 
 I use WinPushBullet to quickly share files between my Windows PC and my Apple devices, achieving AirDrop like functionality.
 
-# Use Cases
-WinPushBullet is great for sharing text, link and files between your Windows computer and Apple devices. Here's a few examples of what you can do when it is fully configured.
-
-## Sending text from my computer to my phone
-
-
 # How To Install
 ## Installing WinPushBullet on your computer
 1. Obtain your PushBullet access token
@@ -21,9 +15,8 @@ WinPushBullet is great for sharing text, link and files between your Windows com
     2. Click the "Download" button and then "Download v2.0"
     3. Run the installer executable to install 
 3. Download the latest release of the WinPushBullet installer
-    1. Go to https://github.com/iffy-pi/winpushbullet/releases
-    2. Go to the top level card on the page (labelled Latest)
-    3. Click the .Setup.exe file to download it
+    1. Go to https://github.com/iffy-pi/winpushbullet/releases/latest
+    2. Click the .Setup.exe file to download it
 4. Run the downloaded installer
     1. When prompted, enter the access token you obtained in Step 1 into the access token text box
 
