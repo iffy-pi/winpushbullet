@@ -99,7 +99,7 @@ def getPushTypeStr(pt:PushType):
 
 def notifyFileSaved(fc: FileContainer, saveDest: str):
     notify(
-        f'Pushed File "{fc.name}" saved' if fc.pushType == PushType.FILE else f'Pushed {getPushTypeStr(fc.pushType)} saved',
+        f"Pushed File '{fc.name}' saved" if fc.pushType == PushType.FILE else f'Pushed {getPushTypeStr(fc.pushType)} saved',
         body=f'Destination: {saveDest}'
     )
 

@@ -149,7 +149,7 @@ def doPush(pushType, item: str, pushingStagingFile=False, pushingCopiedImage=Fal
 
             else:
                 notify(
-                    'File {} pushed succcessfully'.format(path.split(filepath)[1]),
+                    "File '{}' pushed successfully".format(path.split(filepath)[1]),
                     f'Filepath: {item}'
                 )
 

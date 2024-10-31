@@ -137,7 +137,7 @@ def push(file:str = None, link:str = None, note:str = None, title:str = None, cl
             )
         else:
             notify(
-                'File {} pushed successfully'.format(path.split(file)[1]),
+                "File '{}' pushed successfully".format(path.split(file)[1]),
                 f'Filepath: {file}'
             )
 
@@ -209,7 +209,7 @@ def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=Fa
         if saveExt != fc.ext:
             msg += f'\nWarning: Save extension ({saveExt}) does not match pushed file extension ({fc.ext})'
 
-        notify(f'File "{fc.name}" saved', msg)
+        notify(f"File '{fc.name}' saved", msg)
 
 
 def pull(saveTo: str=None, copyItem: bool = False, openItem: bool = False):
