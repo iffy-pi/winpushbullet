@@ -10,12 +10,13 @@ script_loc_dir = path.split(path.realpath(__file__))[0]
 if script_loc_dir not in sys.path:
     sys.path.append(script_loc_dir)
 
-from scripts.shared import getPushBullet, isLink, setHeadless, notify, getAcessToken, setAccessToken, CRED_SERVICE_NAME
+from scripts.shared import getPushBullet, isLink, setHeadless, notify, getAcessToken, setAccessToken, CRED_SERVICE_NAME, config_working_files
 from pc_pushbullet import getClipboardContent, ClipboardContentType, is_file_uri, file_uri_to_file_path
 from pc_pullbullet import openInBrowser, openTextWithOS, isCopyableImage, makeFileContainerFromPush, FileContainer, \
     copyImageToClipboard
 from scripts.PushBullet import PushType
 
+config_working_files(script_loc_dir)
 setHeadless(False)
 
 class ClipAsType(Enum):
@@ -181,7 +182,7 @@ def handleNote(note, openNote):
         str(note)
     )
 
-def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=False):
+def handleFile(fc: FileContainer, openFile=False, copyFile=False):
     if copyFile:
         if not isCopyableImage(fc.ext):
             err("Non-image files cannot be copied to clipboard")
@@ -193,8 +194,7 @@ def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=Fa
         openInBrowser(fc.url)
 
     else:
-        if saveTo is None:
-            saveTo = path.join(getcwd(), fc.name)
+        saveTo = fc.dest if fc.dest is not None else path.join(getcwd(), fc.name)
 
         saveTo = path.abspath(saveTo)
 
@@ -203,9 +203,7 @@ def handleFile(fc: FileContainer, saveTo:str = None, openFile=False, copyFile=Fa
 
         msg = f'Destination: {saveTo}'
 
-        saveExt = path.splitext(saveTo)[1].replace('.', '')
-
-
+        saveExt = path.splitext(saveTo)[1]
         if saveExt != fc.ext:
             msg += f'\nWarning: Save extension ({saveExt}) does not match pushed file extension ({fc.ext})'
 
@@ -225,7 +223,7 @@ def pull(saveTo: str=None, copyItem: bool = False, openItem: bool = False):
             handleLink(pushItem.url, openItem)
 
         case PushType.FILE:
-            handleFile(makeFileContainerFromPush(pushItem), saveTo=saveTo, openFile=openItem, copyFile=copyItem)
+            handleFile(makeFileContainerFromPush(pushItem, None, saveTo, False), openFile=openItem, copyFile=copyItem)
 
         case _:
             raise Exception('Unidentified type {}'.format(pushItem['type']))
@@ -247,7 +245,7 @@ def peek():
             peekLink(pushItem.url)
 
         case PushType.FILE:
-            fc = makeFileContainerFromPush(pushItem)
+            fc = makeFileContainerFromPush(pushItem, None, None, False)
             notify('File last pushed', f'Name:\n{fc.name}\nURL:\n{fc.url}')
 
         case _:
