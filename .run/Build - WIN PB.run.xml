@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build - PC PullBullet" type="PythonConfigurationType" factoryName="Python" folderName="Build Configs">
+  <configuration default="false" name="Build - WIN PB" type="PythonConfigurationType" factoryName="Python" folderName="Build Configs">
     <module name="pushbullet-pc-integration" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -12,7 +12,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/builds/build_system.py" />
-    <option name="PARAMETERS" value="-pullb" />
+    <option name="PARAMETERS" value="-winpb" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

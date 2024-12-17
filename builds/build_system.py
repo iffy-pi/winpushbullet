@@ -14,6 +14,7 @@ class Application(Enum):
     PUSHB = 0
     PULLB = 3
     PB_CLI = 2
+    WINPB = 1
 
 class BuildFailure(Exception):
     def __init__(self, message):
@@ -39,6 +40,12 @@ app_build_info = {
         'folder': 'pb',
         'spec': 'pb.spec',
         'dist': 'pb\\dist\\pb'
+    },
+    Application.WINPB: {
+        'name': 'WinPushBullet',
+        'folder': 'winpb',
+        'spec': 'winpb.spec',
+        'dist': 'winpb\\dist\\WinPushBullet'
     }
 
 }
@@ -70,7 +77,7 @@ def build_application(app: Application):
 
 
 
-def build_installer_fn(build_pc_push, build_pc_pull, build_pb_cli):
+def build_installer_fn():
     chdir(BUILDS_DIRECTORY)
     nsis_path = r'C:\Program Files (x86)\NSIS\makensis.exe'
     print('Starting NSI Installer Build')
@@ -89,29 +96,37 @@ def main():
         build_pc_pull = '-pullb' in args
         build_pb_cli = '-pbcli' in args
         build_installer = '-installer' in args
+        build_win_pb = '-winpb' in args
 
         if '-full' in args:
-            build_pc_push = True
-            build_pc_pull = True
-            build_pb_cli = True
+            build_pc_push = False
+            build_pc_pull = False
+            build_pb_cli = False
+            build_win_pb = True
             build_installer = True
 
-        if build_pc_push:
-            build_application(Application.PUSHB)
+        # if build_pc_push:
+        #     build_application(Application.PUSHB)
+        #
+        # if build_pc_pull:
+        #     build_application(Application.PULLB)
+        #
+        # if build_pb_cli:
+        #     build_application(Application.PB_CLI)
 
-        if build_pc_pull:
-            build_application(Application.PULLB)
-
-        if build_pb_cli:
-            build_application(Application.PB_CLI)
+        if build_win_pb:
+            build_application(Application.WINPB)
 
         if build_installer:
-            build_installer_fn(build_pc_push, build_pc_pull, build_pb_cli)
+            build_installer_fn()
+
+
+        return 0
 
     except Exception as e:
         print('Build stopped due to the following exception:')
         print(e)
-
+        return -1
 
 
 

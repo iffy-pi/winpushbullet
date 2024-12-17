@@ -4,20 +4,20 @@
 ; Ctrl + Alt + [ : Hotkey #1
 ^![:: {
     ; Pull content to clipboard
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
+    Run "`"<INSTDIR>\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
 
 }
 
 ; Ctrl + Alt + ] : Hotkey #2
 ^!]:: {
     ; push clipboard content
-    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--clip`""
+    Run "`"<INSTDIR>\PC_PushBullet.exe`" `"--headless`" `"--clip`""
 }
 
 ; Ctrl + Alt + ; : Hotkey #3
 ^!;:: {
     ; pull and paste, pull content to clipboard and paste
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
+    Run "`"<INSTDIR>\PC_PullBullet.exe`" `"--headless`" `"-action`" `"copy`""
     sleep 100
     Send "^v"
 }
@@ -27,19 +27,19 @@
     ; do ctrl c and then push
     Send "^c"
     Sleep 100
-    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--clip`""
+    Run "`"<INSTDIR>\PC_PushBullet.exe`" `"--headless`" `"--clip`""
 }
 
 ; Ctrl + Alt + , : Hotkey #5
 ^!,:: {
     ; pull and save to file
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"save`" `"--handleAsFile`""
+    Run "`"<INSTDIR>\PC_PullBullet.exe`" `"--headless`" `"-action`" `"save`" `"--handleAsFile`""
 }
 
 ; Ctrl + Alt + . : Hotkey #6
 ^!.:: {
     ; view content
-    Run "`"<INSTDIR>\PC_PullBullet\PC_PullBullet.exe`" `"--headless`" `"-action`" `"view`""
+    Run "`"<INSTDIR>\PC_PullBullet.exe`" `"--headless`" `"-action`" `"view`""
 }
 
 ; Ctrl + Alt + / : Hotkey #7
@@ -49,5 +49,5 @@
     Sleep 100
     Send "^c"
     Sleep 100
-    Run "`"<INSTDIR>\PC_PushBullet\PC_PushBullet.exe`" `"--headless`" `"--link`" `"--convertFileURI`""
+    Run "`"<INSTDIR>\PC_PushBullet.exe`" `"--headless`" `"--link`" `"--convertFileURI`""
 }

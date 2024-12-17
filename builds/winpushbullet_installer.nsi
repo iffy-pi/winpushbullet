@@ -25,7 +25,7 @@
 !define VER_MINOR 1
 !define VER_REVISION 0
 
-!define INPUT_DIR ".\fulldist"           ; directory to pack
+!define INPUT_DIR ".\fulldist\WinPushBullet"           ; directory to pack
 !define OUTPUT_DIR ".\installers"										   ; directory in which to write installer exe
 
 !define PRODUCT "WinPushBullet"                                ; product name
@@ -143,7 +143,7 @@ Function ConfigPage
 	Pop $LblAccessToken
 
 	; Get the pushbullet access token if it exists
-	ExecDos::exec /TIMEOUT=5000 /TOSTACK '$INSTDIR\pb\pb.exe --get-token-only'
+	ExecDos::exec /TIMEOUT=5000 /TOSTACK '$INSTDIR\pb.exe --get-token-only'
 	Pop $0
 	; $0 has access token value
 	; If it is -1, put nothing in the field
@@ -187,13 +187,12 @@ Function ConfigPageLeave
 
 	; Save the access token
 	${NSD_GetText} $TxtAccessToken $0
-	Exec '"$INSTDIR\pb\pb.exe" "-set-token" "$0"'
+	Exec '"$INSTDIR\pb.exe" "-set-token" "$0"'
 
 	; Generate the hotkey script at the required address
 	${NSD_GetText} $TxtHotkeyScriptAddr $0
-	${If} $0 != "$INSTDIR\WinPushBullet_Hotkeys.ahk"
-		Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -Command "(Get-Content \"$INSTDIR\hotkeys_template.ahk\").replace(\"<INSTDIR>\", \"$INSTDIR\") | Set-Content \"$0\""'
-	${EndIf}
+	Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -Command "(Get-Content \"$INSTDIR\hotkeys_template.ahk\").replace(\"<INSTDIR>\", \"$INSTDIR\") | Set-Content \"$0\""'
+	Delete "$INSTDIR\hotkeys_template.ahk"
 
 	; Load hotkey script if requested
 	${NSD_GetState} $ChkBxRunHotKeyNow $ChkBxState
@@ -264,28 +263,28 @@ Function AddFileExplorerContextMenuItems
 
 	; Add "Push file" to file context menu
 	WriteRegStr HKCR "*\shell\${PRODUCT} Push File" "" "&Push file"
-	WriteRegStr HKCR "*\shell\${PRODUCT} Push File" "Icon" "$INSTDIR\PC_PushBullet\PC_PushBullet.exe"
-	WriteRegStr HKCR "*\shell\${PRODUCT} Push File\command" "" '"$INSTDIR\PC_PushBullet\PC_PushBullet.exe" "--headless" "-arg" "%1" "--file"'
+	WriteRegStr HKCR "*\shell\${PRODUCT} Push File" "Icon" "$INSTDIR\PC_PushBullet.exe"
+	WriteRegStr HKCR "*\shell\${PRODUCT} Push File\command" "" '"$INSTDIR\PC_PushBullet.exe" "--headless" "-arg" "%1" "--file"'
 
 	; Add "Push path of selected directory"
 	WriteRegStr HKCR "Directory\shell\${PRODUCT} Push Selected Directory" "" "&Push path to selected directory"
-	WriteRegStr HKCR "Directory\shell\${PRODUCT} Push Selected Directory" "Icon" "$INSTDIR\PC_PushBullet\PC_PushBullet.exe"
-	WriteRegStr HKCR "Directory\shell\${PRODUCT} Push Selected Directory\command" "" '"$INSTDIR\PC_PushBullet\PC_PushBullet.exe" "--headless" "-arg" "%V" "--text"'
+	WriteRegStr HKCR "Directory\shell\${PRODUCT} Push Selected Directory" "Icon" "$INSTDIR\PC_PushBullet.exe"
+	WriteRegStr HKCR "Directory\shell\${PRODUCT} Push Selected Directory\command" "" '"$INSTDIR\PC_PushBullet.exe" "--headless" "-arg" "%V" "--text"'
 
 	; Add "Push path of here"
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Push Background Directory" "" "&Push path to current directory"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Push Background Directory" "Icon" "$INSTDIR\PC_PushBullet\PC_PushBullet.exe"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Push Background Directory\command" "" '"$INSTDIR\PC_PushBullet\PC_PushBullet.exe" "--headless" "-arg" "%V" "--text"'
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Push Background Directory" "Icon" "$INSTDIR\PC_PushBullet.exe"
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Push Background Directory\command" "" '"$INSTDIR\PC_PushBullet.exe" "--headless" "-arg" "%V" "--text"'
 	
 	; Add "Pull file to here"
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File" "" "&Pull file to here"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File" "Icon" "$INSTDIR\PC_PullBullet\PC_PullBullet.exe"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V"'
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File" "Icon" "$INSTDIR\PC_PullBullet.exe"
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File\command" "" '"$INSTDIR\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V"'
 
 	; Add "Pull file to here and rename...."
 	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename" "" "&Pull file to here and rename..."
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename" "Icon" "$INSTDIR\PC_PullBullet\PC_PullBullet.exe"
-	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename\command" "" '"$INSTDIR\PC_PullBullet\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V" "--explorer"'
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename" "Icon" "$INSTDIR\PC_PullBullet.exe"
+	WriteRegStr HKCR "Directory\Background\shell\${PRODUCT} Pull File And Rename\command" "" '"$INSTDIR\PC_PullBullet.exe" "--headless" "--handleAsFile" "-action" "save" "-saveIn" "%V" "--explorer"'
 FunctionEnd
 
 ;--------------------------------------------------------------------------------------------------------------------------------
@@ -301,8 +300,9 @@ Section "Install"
 	SetOutPath $INSTDIR
 	File /r "${INPUT_DIR}\*"
 
-	; Generate hot keys to install
-	File "${INPUT_DIR}\..\hotkeys_template.ahk"
+	; Copy hotkey template to installation directory, used for configuring hotkeys later
+	; By default generates to WinPushBullet_Hotkeys.ahk
+	File "${INPUT_DIR}\..\..\hotkeys_template.ahk"
 	Exec '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -Command "(Get-Content hotkeys_template.ahk).replace(\"<INSTDIR>\", \"$INSTDIR\") | Set-Content WinPushBullet_Hotkeys.ahk"'
 
 	; Add explorer context menu items
@@ -324,11 +324,7 @@ Section "un.Install"
 
 
 	; Delete application files
-	RMDir /r "$INSTDIR\PC_PullBullet"
-	RMDir /r "$INSTDIR\PC_PushBullet"
-	RMDir /r "$INSTDIR\pb"
-	Delete "$INSTDIR\hotkeys_template.ahk"
-	Delete "$INSTDIR\WinPushBullet_Hotkeys.ahk"
+	RMDir /r "$INSTDIR\*"
 	
 	SetShellVarContext current
 	Delete "$SMSTARTUP\WinPushBullet hotkeys.lnk"
